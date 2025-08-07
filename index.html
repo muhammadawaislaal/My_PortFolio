@@ -625,31 +625,3 @@
 
 
 
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <!-- Existing head content remains the same -->
-  <!-- Add this just before closing head tag -->
-  <link rel="preload" href="https://assets.mixkit.co/music/preview/mixkit-nature-ambience-1195.mp3" as="audio">
-</head>
-<body class="light-theme">
-  <!-- Add this audio element at the top of body -->
-  <audio id="bg-music" loop>
-    <source src="https://assets.mixkit.co/music/preview/mixkit-nature-ambience-1195.mp3" type="audio/mpeg">
-  </audio>
-  
-  <!-- Add music control button next to theme toggle -->
-  <div class="music-control">
-    <button id="music-toggle" aria-label="Toggle background music">
-      <ion-icon name="musical-notes-outline"></ion-icon>
-    </button>
-  </div>
-
-  <!-- Rest of your existing HTML remains exactly the same -->
-
-  <script src="script.js"></script>
-  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-</body>
-</html>
