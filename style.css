@@ -1202,3 +1202,55 @@ textarea.form-input {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* === Classy Clean Look: Remove All Borders Globally === */
+*,
+*::before,
+*::after {
+  border: none !important;
+  box-shadow: none;
+}
+
+/* Optional: Keep soft shadows for cards/containers for depth */
+.sidebar,
+article,
+.content-card,
+.project-item,
+.mapbox,
+.navbar,
+.filter-select,
+.select-list,
+.timeline-item,
+.testimonials-avatar-box {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  border-radius: 10px;
+  background: var(--bg-card);
+}
+
+/* Optional: Remove horizontal separator lines */
+.separator {
+  background: transparent !important;
+  height: 0 !important;
+  margin: 0 !important;
+}
+
+/* Optional: Subtle accent line for headings if you like */
+.article-title::after {
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+  height: 2px;
+  border: none;
+}
