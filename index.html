@@ -625,3 +625,188 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Muhammad Awais Laal - Aspiring Gen AI Specialist Portfolio</title>
+  <meta name="description" content="Portfolio of Muhammad Awais Laal, an Aspiring Gen AI Specialist offering expertise in AI development, machine learning, data analysis, and web applications.">
+  <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/6295/6295638.png" type="image/x-icon">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Preload background music -->
+  <link rel="preload" href="https://assets.mixkit.co/music/preview/mixkit-nature-ambience-1195.mp3" as="audio">
+  <!-- Add this style block for the music control -->
+  <style>
+    /* Music control styles */
+    .music-control {
+      position: fixed;
+      bottom: 75px;
+      right: 15px;
+      z-index: 1000;
+    }
+    
+    #music-toggle {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-neon);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-primary);
+      font-size: 20px;
+      transition: all var(--transition-medium);
+      cursor: pointer;
+    }
+    
+    #music-toggle:hover {
+      background: var(--neon-gradient);
+      transform: scale(1.1) rotate(15deg);
+    }
+    
+    @media (max-width: 580px) {
+      .music-control {
+        bottom: 70px;
+      }
+      
+      #music-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body class="light-theme">
+  <!-- Add this audio element at the top of body -->
+  <audio id="bg-music" loop>
+    <source src="https://assets.mixkit.co/music/preview/mixkit-nature-ambience-1195.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  
+  <!-- Add music control button next to theme toggle -->
+  <div class="music-control">
+    <button id="music-toggle" aria-label="Toggle background music">
+      <ion-icon name="musical-notes-outline"></ion-icon>
+    </button>
+  </div>
+
+  <!-- Your existing content remains exactly the same here -->
+  <main>
+    <!-- All your existing content -->
+  </main>
+
+  <!-- Update the script.js content with the enhanced version -->
+  <script>
+    'use strict';
+
+    /**
+     * Utility: Toggle element's active class
+     * @param {HTMLElement} elem - Element to toggle
+     */
+    const toggleElement = (elem) => elem.classList.toggle('active');
+
+    /**
+     * Utility: Debounce function to limit event frequency
+     * @param {Function} func - Function to debounce
+     * @param {number} delay - Delay in milliseconds
+     * @returns {Function} Debounced function
+     */
+    const debounce = (func, delay) => {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(null, args), delay);
+      };
+    };
+
+    /**
+     * Utility: Throttle function to limit event frequency
+     * @param {Function} func - Function to throttle
+     * @param {number} limit - Minimum interval in milliseconds
+     * @returns {Function} Throttled function
+     */
+    const throttle = (func, limit) => {
+      let inThrottle;
+      return (...args) => {
+        if (!inThrottle) {
+          func.apply(null, args);
+          inThrottle = true;
+          setTimeout(() => (inThrottle = false), limit);
+        }
+      };
+    };
+
+    // Background music control
+    const initMusicControl = () => {
+      const musicToggle = document.getElementById('music-toggle');
+      const bgMusic = document.getElementById('bg-music');
+      const musicIcon = musicToggle.querySelector('ion-icon');
+      
+      // Set very low volume (10%)
+      bgMusic.volume = 0.1;
+      
+      // Try to autoplay (may be blocked by browser)
+      const playPromise = bgMusic.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // Autoplay was prevented, show paused state
+          musicIcon.setAttribute('name', 'volume-mute-outline');
+        });
+      }
+
+      musicToggle.addEventListener('click', () => {
+        if (bgMusic.paused) {
+          bgMusic.play();
+          musicIcon.setAttribute('name', 'musical-notes-outline');
+        } else {
+          bgMusic.pause();
+          musicIcon.setAttribute('name', 'volume-mute-outline');
+        }
+      });
+    };
+
+    // Initialize all features
+    const init = () => {
+      initMusicControl();
+      // Your existing initialization functions
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+</body>
+</html>
+
+
+
+
+
