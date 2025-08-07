@@ -1302,10 +1302,76 @@ button, .btn, input[type="submit"], input[type="button"] {
   box-shadow: 0 2px 8px rgba(58,134,255,0.08);
   letter-spacing: 0.5px;
   transition: var(--transition);
+  display: inline-block;
+  max-width: 100%;
+  /* Make sure button content never overflows */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 button:hover, .btn:hover, input[type="submit"]:hover, input[type="button"]:hover {
   background: #2657a4;
   transform: translateY(-2px) scale(1.03);
+}
+
+/* Responsive Download Resume Button
+   Replace .download-resume-btn with your actual class or id if different!
+*/
+.download-resume-btn {
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.7em 2.2em;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(58,134,255,0.13);
+  letter-spacing: 0.6px;
+  transition: var(--transition);
+  font-size: 1.1rem;
+  margin: 1em 0;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure it's fully visible and accessible on desktop/laptops */
+@media (min-width: 1025px) {
+  .download-resume-btn {
+    font-size: 1.15rem;
+    padding: 0.8em 2.7em;
+    margin-top: 1.8em;
+    margin-bottom: 1.8em;
+    max-width: 340px;
+  }
+}
+
+/* Responsive adjustments for tablets and below */
+@media (max-width: 1024px) {
+  .download-resume-btn {
+    font-size: 1.02rem;
+    padding: 0.7em 1.5em;
+    margin-top: 1.2em;
+    margin-bottom: 1.2em;
+    max-width: 90vw;
+  }
+}
+@media (max-width: 600px) {
+  .download-resume-btn {
+    font-size: 0.98rem;
+    padding: 0.65em 1.1em;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.8em;
+    margin-bottom: 0.8em;
+    /* Center on mobile */
+    display: block;
+    text-align: center;
+  }
 }
 
 /* 7. Inputs & Forms */
