@@ -1197,41 +1197,223 @@ textarea.form-input {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 @keyframes fadeIn {
     from { opacity:0; }
     to { opacity:1; }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* === Global UI Enhancement Section: Classy, Clean, Eye-Catching === */
+/* You can paste this at the end of your style.css file */
+
+/* 1. Root Variables for Consistency */
+:root {
+  --font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-size-base: 16px;
+  --font-weight-normal: 400;
+  --font-weight-bold: 600;
+  --border-radius: 12px;
+  --shadow: 0 4px 16px rgba(0,0,0,0.05), 0 1.5px 7px rgba(0,0,0,0.04);
+  --main-bg: #fcfcfc;
+  --card-bg: #fff;
+  --accent: #3a86ff;
+  --text-color: #232323;
+  --subtle-text: #666;
+  --transition: all 0.25s cubic-bezier(.4,0,.2,1);
+}
+
+/* 2. Base Styles: Typography & Background */
+body {
+  font-family: var(--font-family) !important;
+  font-size: var(--font-size-base);
+  color: var(--text-color);
+  background: var(--main-bg);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  transition: var(--transition);
+  min-height: 100vh;
+}
+
+/* 3. Universal Box-sizing & Smoothing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+/* 4. Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family);
+  color: var(--accent);
+  font-weight: var(--font-weight-bold);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  letter-spacing: -1px;
+}
+
+/* 5. Containers & Cards */
+.container, .card, section, main, article {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  transition: var(--transition);
+}
+
+/* 6. General Buttons (EXCEPT HEADER BUTTONS) */
+button, .btn, input[type="submit"], input[type="button"] {
+  font-family: inherit;
+  font-weight: var(--font-weight-bold);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.65em 1.5em;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(58,134,255,0.08);
+  letter-spacing: 0.5px;
+  transition: var(--transition);
+}
+button:hover, .btn:hover, input[type="submit"]:hover, input[type="button"]:hover {
+  background: #2657a4;
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* 7. Inputs & Forms */
+input, textarea, select {
+  font-family: inherit;
+  padding: 0.75em 1em;
+  border-radius: var(--border-radius);
+  border: 1px solid #ddd;
+  margin-bottom: 1em;
+  background: #f7f9fa;
+  transition: box-shadow 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(58,134,255,0.1);
+}
+
+/* 8. Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s;
+  font-weight: var(--font-weight-bold);
+}
+a:hover {
+  color: #2657a4;
+  text-decoration: underline;
+}
+
+/* 9. Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+th, td {
+  padding: 1em;
+  border-bottom: 1px solid #eee;
+}
+th {
+  background: #f4f8fc;
+  color: var(--accent);
+  font-weight: var(--font-weight-bold);
+}
+
+/* 10. Images */
+img {
+  max-width: 100%;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: transform 0.2s;
+}
+img:hover {
+  transform: scale(1.01) translateY(-2px);
+}
+
+/* 11. Responsive Layouts */
+@media (max-width: 1024px) {
+  .container, .card, section, main, article {
+    padding: 1.2rem;
+  }
+  body {
+    font-size: 15px;
+  }
+}
+@media (max-width: 600px) {
+  .container, .card, section, main, article {
+    padding: 0.7rem;
+    margin-bottom: 1rem;
+  }
+  body {
+    font-size: 14px;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 1.2rem;
+    margin-bottom: 0.7rem;
+  }
+}
+
+/* 12. Utility: Subtle Text */
+.muted, .subtle, small {
+  color: var(--subtle-text) !important;
+  font-size: 0.96em !important;
+}
+
+/* 13. Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #f0f0f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4e2fa;
+  border-radius: 8px;
+}
+
+/* 14. Keep Header Buttons As Before (No Override)
+If your header buttons have a specific class/id (e.g., .header-btn), add this to prevent color change: */
+.header-btn, header button, nav button {
+  /* No background or color override, preserving original styles */
+  background: inherit !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  border: none !important;
+  transition: var(--transition);
+}
+
+/* === End UI Enhancement Section === */
