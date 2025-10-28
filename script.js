@@ -85,7 +85,7 @@ const initThemeToggle = () => {
 // WhatsApp message display
 const initWhatsAppMessages = () => {
   const messages = [
-    "Let's connect!",
+    "Hire me At FIVERR",
     "Ready to collaborate?",
     "Reach out today!",
     "Got a project? Let's talk!",
