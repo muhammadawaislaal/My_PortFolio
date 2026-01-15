@@ -511,15 +511,57 @@ const initErrorHandling = () => {
   });
 };
 
-// Groq AI API Integration
-const GROQ_API_KEY = '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';
+// Groq AI API Integration - Secure Configuration
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+// Load API Key securely from localStorage or env
+let GROQ_API_KEY = null;
+
+// Try to load API key from localStorage (set by user or from env.txt locally)
+const loadAPIKey = async () => {
+  // First check localStorage
+  if (localStorage.getItem('groq_api_key')) {
+    GROQ_API_KEY = localStorage.getItem('groq_api_key');
+    return GROQ_API_KEY;
+  }
+
+  // For localhost development, try to load from env.txt
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    try {
+      const response = await fetch('env.txt');
+      if (response.ok) {
+        const text = await response.text();
+        const match = text.match(/GROQ_API_KEY=(.+)/);
+        if (match) {
+          GROQ_API_KEY = match[1].trim();
+          return GROQ_API_KEY;
+        }
+      }
+    } catch (e) {
+      console.log('Could not load env.txt - running in fallback mode');
+    }
+  }
+
+  return null;
+};
+
+// Initialize API key on page load
+loadAPIKey().then(key => {
+  if (!key) {
+    console.warn('Groq API Key not found. AI features will be limited. For full functionality, add your API key to localStorage: localStorage.setItem("groq_api_key", "your_key_here")');
+  }
+});
 
 let conversationHistory = [];
 let messageCount = 0;
 
 // Function to call Groq API
 const callGroqAPI = async (userMessage) => {
+  // Check if API key is available
+  if (!GROQ_API_KEY) {
+    return "I appreciate your interest! For real-time AI responses, please contact Awais directly at muhammadawaislaal@gmail.com or visit Fiverr. Your message is important! 💙";
+  }
+
   try {
     // Add user message to history
     conversationHistory.push({
