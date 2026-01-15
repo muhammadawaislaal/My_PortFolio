@@ -549,25 +549,6 @@ const loadAPIKey = async () => {
 loadAPIKey().then(key => {
   if (!key) {
     console.warn('Groq API Key not found. AI features will be limited. For full functionality, add your API key to localStorage: localStorage.setItem("groq_api_key", "your_key_here")');
-    // Show API key prompt
-    const apiKeyPrompt = document.getElementById('apiKeyPrompt');
-    if (apiKeyPrompt) {
-      apiKeyPrompt.style.display = 'block';
-      const saveBtn = document.getElementById('saveApiKeyBtn');
-      const apiKeyInput = document.getElementById('apiKeyInput');
-      
-      if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
-          const key = apiKeyInput.value.trim();
-          if (key) {
-            localStorage.setItem('groq_api_key', key);
-            GROQ_API_KEY = key;
-            apiKeyPrompt.style.display = 'none';
-            alert('✅ API Key saved! Refresh the page to enable AI responses.');
-          }
-        });
-      }
-    }
   }
 });
 
