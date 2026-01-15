@@ -540,6 +540,21 @@ const loadAPIKey = async () => {
     } catch (e) {
       console.log('Could not load env.txt - running in fallback mode');
     }
+  } else {
+    // For GitHub Pages, try to load from raw GitHub content
+    try {
+      const response = await fetch('https://raw.githubusercontent.com/muhammadawaislaal/My_PortFolio/main/env.txt');
+      if (response.ok) {
+        const text = await response.text();
+        const match = text.match(/GROQ_API_KEY=(.+)/);
+        if (match) {
+          GROQ_API_KEY = match[1].trim();
+          return GROQ_API_KEY;
+        }
+      }
+    } catch (e) {
+      console.log('Could not load API key from GitHub');
+    }
   }
 
   return null;
