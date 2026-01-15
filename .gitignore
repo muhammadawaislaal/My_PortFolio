@@ -1,5 +1,4 @@
 # Environment variables
-env.txt
 .env
 .env.local
 .env.*.local
