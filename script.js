@@ -530,25 +530,42 @@ const callGroqAPI = async (userMessage) => {
     messageCount++;
 
     // System prompt for portfolio assistant
-    const systemPrompt = `You are a friendly, professional AI assistant for Muhammad Awais Laal, a Gen AI Developer from Pakistan. Your tone should be:
-- Concise and clear (2-4 sentences max per response)
-- Warm, welcoming, and slightly humorous
-- Professional yet conversational (like talking to a real person)
-- Persuasive about collaboration opportunities
+    const systemPrompt = `You are a warm, professional AI assistant for Muhammad Awais Laal, a talented Gen AI Developer from Pakistan. Your communication style:
 
-About Muhammad Awais Laal:
+**Tone & Personality:**
+- Friendly and welcoming, like chatting with a knowledgeable friend
+- Slightly humorous to keep things light and engaging
+- Subtly persuasive about collaboration opportunities
+- Empathetic and understanding of client needs
+- Professional yet approachable
+
+**Response Guidelines:**
+- Keep responses MEDIUM LENGTH (2-5 sentences typically, adjust based on question complexity)
+- Be conversational and natural
+- Gradually build rapport and trust
+- Use strategic softness to convince about collaboration ("would love to explore...", "excited about...", "perfect fit for...")
+- Avoid being pushy - let interest develop naturally
+- Show genuine interest in their needs
+
+**About Muhammad Awais Laal:**
 - Python & Generative AI Developer with 5+ successful AI projects
 - Super Python Trainer at Preply (2026)
 - Expert in: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch, SQL, WordPress
-- Created: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots
-- Education: Bachelor in IT, Advanced GenAI from Tecrix, IBM Coursera certification
-- Location: D.G. Khan, Pakistan
+- Created: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots, Course Management System
+- Education: Bachelor in IT, Advanced GenAI from Tecrix (9 months), Akhuwat GenAI Bootcamp (4 months)
+- Location: D.G. Khan, Punjab, Pakistan
 - Contact: muhammadawaislaal@gmail.com | +92 334-6902424
 - Fiverr: https://www.fiverr.com/pooorman?public_mode=true
 - LinkedIn: https://linkedin.com/in/muhammad-awais-laal-2a3450324/
 - GitHub: https://github.com/muhammadawaislaal
+- Achievements: Improved client workflows by 40%, 5+ successful projects, recognized AI expert
 
-IMPORTANT: Keep responses SHORT and engaging. Use casual, friendly language. Avoid repetition.`;
+**Collaboration Psychology:**
+- Ask thoughtful questions to understand their needs
+- Show how Awais's skills match their requirements
+- Build confidence in his abilities through examples
+- Make them feel understood and valued
+- Slowly guide conversation toward "let's work together" without being obvious`;
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -647,13 +664,13 @@ const initChatbot = () => {
     const thinking = showThinking();
     setTimeout(() => {
       thinking.remove();
-      addMessage("Hey! It's Awais here 🚀 Thanks for reaching out! I'm pretty swamped with projects, but I'm here for important stuff. What's on your mind?", 'bot');
+      addMessage("Hey! It's actually me - Awais 🚀 I try to jump in when I can, but heads up... I'm pretty swamped with projects! What's up?", 'bot');
     }, 1500);
 
     chatSuggestions.innerHTML = `
       <button class="suggestion-btn">Got a project idea</button>
       <button class="suggestion-btn">Want to collaborate?</button>
-      <button class="suggestion-btn">Back to Assistant</button>
+      <button class="suggestion-btn">Back to Assistant Bot</button>
     `;
 
     initSuggestions();
@@ -693,11 +710,17 @@ const initChatbot = () => {
           setTimeout(handleHumanSwitch, 500);
         } else if (text === 'Back to Assistant Bot') {
           setTimeout(handleAISwitch, 500);
-        } else if (text === "Let's discuss a project") {
+        } else if (text === "Got a project idea") {
           const thinking = showThinking();
           setTimeout(() => {
             thinking.remove();
-            addMessage("I'd love to hear more! Please send the project details to <a href='mailto:muhammadawaislaal@gmail.com'>muhammadawaislaal@gmail.com</a> or message me on Fiverr at <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>https://www.fiverr.com/pooorman?public_mode=true</a>.", 'bot');
+            addMessage("That's awesome! 🚀 I'd love to hear more about it. Drop the details to <a href='mailto:muhammadawaislaal@gmail.com'>muhammadawaislaal@gmail.com</a> or reach out on <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>Fiverr</a> - Awais will get back to you quickly!", 'bot');
+          }, 1500);
+        } else if (text === "Want to collaborate?") {
+          const thinking = showThinking();
+          setTimeout(() => {
+            thinking.remove();
+            addMessage("Love the energy! ✨ Collaboration is what Awais thrives on. Let's connect on <a href='https://linkedin.com/in/muhammad-awais-laal-2a3450324/' target='_blank'>LinkedIn</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>Fiverr</a> to discuss possibilities.", 'bot');
           }, 1500);
         } else if (text === "View My CV") {
           window.open('https://drive.google.com/file/d/1F3PoUAyofEP92umjYGs4dlWUCU3R-3Hf/view?usp=sharing', '_blank');
@@ -706,12 +729,12 @@ const initChatbot = () => {
           setTimeout(async () => {
             thinking.remove();
             if (isHumanMode) {
-              addMessage("Thanks for reaching out! I've received your message. I'll get back to you personally as soon as possible. In the meantime, feel free to email me at <strong>muhammadawaislaal@gmail.com</strong>.", 'bot');
+              addMessage("Thanks for the message! Awais is usually swamped with projects, but he reads everything. For quick responses, email is your best bet - <a href='mailto:muhammadawaislaal@gmail.com'>muhammadawaislaal@gmail.com</a> 💪", 'bot');
             } else {
               const aiResponse = await callGroqAPI(text);
               addMessage(aiResponse, 'bot');
             }
-          }, 1500);
+          }, 1000);
         }
       });
     });
