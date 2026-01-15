@@ -730,12 +730,15 @@ const initChatbot = () => {
       if (isHumanMode) {
         // Human mode: Have real conversation for 5-6 messages before suggesting contact
         const humanResponses = [
-          { input: ['how are you', 'how are you doing', 'whats up'], response: "Doing good! Just grinding on some AI projects 💻 How about you?" },
-          { input: ['what are you doing', 'what you up to', 'busy'], response: "Always working on something cool with AI and Python. Typical startup hustle you know? 😅" },
-          { input: ['tell me about yourself', 'who are you', 'about you'], response: "I'm a Gen AI Developer - built 5+ AI projects like YouTube summarizers, SQL agents, trading predictors. Love building things that solve real problems! 🚀" },
-          { input: ['cool', 'nice', 'awesome', 'interesting'], response: "Thanks! Always excited to work on new challenges. Do you have something in mind?" },
-          { input: ['yeah', 'yes', 'actually', 'kinda', 'maybe'], response: "Oh cool! Tell me more - what's the idea or challenge you're thinking about?" },
-          { input: ['project', 'idea', 'help', 'need', 'want'], response: "Love it! This is where things get interesting. What's the vision?" }
+          { input: ['how are you', 'how are you doing', 'whats up', 'doing great', 'doing good'], response: "Awesome! 🙌 Glad to hear it. So what brings you my way?" },
+          { input: ['what are you doing', 'what you up to', 'busy'], response: "Always working on something cool with AI and Python. Typical startup hustle you know? 😅 What about you?" },
+          { input: ['tell me about yourself', 'who are you', 'about you', 'background'], response: "I'm a Gen AI Developer - built 5+ AI projects like YouTube summarizers, SQL agents, trading predictors. Love building things that solve real problems! 🚀 Curious about your idea?" },
+          { input: ['chatbot', 'ecommerce', 'store', 'project', 'idea', 'help', 'need', 'want to build'], response: "Nice! Now we're talking 💡 Tell me more - what's the scope and what's your timeline looking like?" },
+          { input: ['budget', '500', 'cost', 'price', 'pricing'], response: "Got it. $500 is a solid starting point for certain solutions. Depending on complexity and timeline, we might be able to work something out. What's your deadline looking like?" },
+          { input: ['interested', 'collaborate', 'work together', 'partnership', 'hire me'], response: "Absolutely! I'm definitely interested in exploring this 🚀 Let's keep the momentum. Best way forward: shoot me the full details to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>muhammadawaislaal@gmail.com</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> so I can give you an accurate quote & timeline. Let's make this happen! 💪" },
+          { input: ['yes', 'yeah', 'yep', 'definitely', 'absolutely'], response: "Awesome! 🎉 I'm hyped about this. For next steps and to lock in details, let's move to email or Fiverr - I can give you a proper scope & timeline there." },
+          { input: ['timeline', 'when', 'deadline', 'how long', 'asap'], response: "Smart question! Timeline depends on complexity. Simple chatbots? 1-2 weeks. Complex integrations? 3-4 weeks. Let me know your target date and we can figure it out together." },
+          { input: ['thanks', 'thank you', 'appreciate'], response: "Anytime! Happy to explore ideas. Let's keep building cool stuff together 🚀" }
         ];
 
         let responded = false;
@@ -750,7 +753,7 @@ const initChatbot = () => {
         }
 
         if (!responded) {
-          addMessage("Sounds interesting! Tell me more about what you have in mind 👂", 'bot');
+          addMessage("Gotcha! So what exactly are you looking to build or explore? 🤔", 'bot');
         }
 
         // After 6+ messages, gently suggest continuation
@@ -760,7 +763,7 @@ const initChatbot = () => {
             suggestion.className = 'message bot-message';
             suggestion.style.fontSize = '0.85em';
             suggestion.style.opacity = '0.85';
-            suggestion.innerHTML = "Note: I'm pretty swamped right now, but I'm all ears! For a detailed discussion and quick turnaround, my assistant bot is great, or email me at <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>muhammadawaislaal@gmail.com</a> 👍";
+            suggestion.innerHTML = "Real talk: I'm pretty swamped right now, but this sounds promising! For proper scope, timeline & pricing, let's take it to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>muhammadawaislaal@gmail.com</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> where I can give you my best shot 👍";
             chatMessages.appendChild(suggestion);
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }, 800);
