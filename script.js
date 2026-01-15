@@ -516,6 +516,7 @@ const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 let conversationHistory = [];
+let messageCount = 0;
 
 // Function to call Groq API
 const callGroqAPI = async (userMessage) => {
@@ -526,20 +527,28 @@ const callGroqAPI = async (userMessage) => {
       content: userMessage
     });
 
+    messageCount++;
+
     // System prompt for portfolio assistant
-    const systemPrompt = `You are a professional AI assistant for Muhammad Awais Laal, a Gen AI Developer from Pakistan with expertise in Generative AI, Machine Learning, and Web Development. 
+    const systemPrompt = `You are a friendly, professional AI assistant for Muhammad Awais Laal, a Gen AI Developer from Pakistan. Your tone should be:
+- Concise and clear (2-4 sentences max per response)
+- Warm, welcoming, and slightly humorous
+- Professional yet conversational (like talking to a real person)
+- Persuasive about collaboration opportunities
 
 About Muhammad Awais Laal:
-- Gen AI Developer specializing in Python, Flask, LangChain, and AI models
-- Created 5+ AI projects including YouTube Summarizers, SQL Agents, Trading Predictors
-- Expertise: TensorFlow, PyTorch, OpenAI API, LangChain, Hugging Face, NLP, Transformers
-- Portfolio includes: BI Chatbot, Prompt-to-Image Generator, Course Management System
-- Available on Fiverr: https://www.fiverr.com/pooorman?public_mode=true
-- LinkedIn: https://linkedin.com/in/muhammad-awais-2a3450324/
-- Email: muhammadawaislaal@gmail.com
-- Phone: +92 3346902424
+- Python & Generative AI Developer with 5+ successful AI projects
+- Super Python Trainer at Preply (2026)
+- Expert in: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch, SQL, WordPress
+- Created: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots
+- Education: Bachelor in IT, Advanced GenAI from Tecrix, IBM Coursera certification
+- Location: D.G. Khan, Pakistan
+- Contact: muhammadawaislaal@gmail.com | +92 334-6902424
+- Fiverr: https://www.fiverr.com/pooorman?public_mode=true
+- LinkedIn: https://linkedin.com/in/muhammad-awais-laal-2a3450324/
+- GitHub: https://github.com/muhammadawaislaal
 
-Provide helpful, professional responses about Awais's skills, projects, and services. Be conversational and engaging. If someone wants to hire him, direct them to Fiverr, LinkedIn, or email.`;
+IMPORTANT: Keep responses SHORT and engaging. Use casual, friendly language. Avoid repetition.`;
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -548,24 +557,29 @@ Provide helpful, professional responses about Awais's skills, projects, and serv
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'mixtral-8x7b-32768',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
           ...conversationHistory
         ],
-        max_tokens: 1024,
-        temperature: 0.7
+        max_tokens: 300,
+        temperature: 0.8
       })
     });
 
     if (!response.ok) {
       const error = await response.json();
       console.error('Groq API Error:', error);
-      return "I'm having trouble connecting to the AI service. Please try again or contact Awais directly at muhammadawaislaal@gmail.com";
+      return "Oops! Connection issue. Reach out to Awais directly at muhammadawaislaal@gmail.com or Fiverr 😊";
     }
 
     const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    let assistantMessage = data.choices[0].message.content;
+
+    // After 4-6 exchanges, suggest direct contact
+    if (messageCount >= 5) {
+      assistantMessage += "\n\n💡 _Feel free to connect directly with Awais on **[LinkedIn](https://linkedin.com/in/muhammad-awais-laal-2a3450324/)**, **[Fiverr](https://www.fiverr.com/pooorman?public_mode=true)**, or email **muhammadawaislaal@gmail.com** for quick responses!_";
+    }
 
     // Add assistant response to history
     conversationHistory.push({
@@ -573,15 +587,15 @@ Provide helpful, professional responses about Awais's skills, projects, and serv
       content: assistantMessage
     });
 
-    // Keep conversation history manageable (last 10 messages)
-    if (conversationHistory.length > 10) {
-      conversationHistory = conversationHistory.slice(-10);
+    // Keep conversation history manageable
+    if (conversationHistory.length > 12) {
+      conversationHistory = conversationHistory.slice(-12);
     }
 
     return assistantMessage;
   } catch (error) {
     console.error('Groq API Error:', error);
-    return "I'm having trouble connecting to the AI service. Please try again or contact Awais directly at muhammadawaislaal@gmail.com";
+    return "Having trouble connecting 😅 Try emailing Awais at muhammadawaislaal@gmail.com!";
   }
 };
 
@@ -624,21 +638,22 @@ const initChatbot = () => {
 
   const handleHumanSwitch = () => {
     isHumanMode = true;
-    botAvatar.innerHTML = '<img src="my profile pic.png" alt="Awais">';
+    botAvatar.innerHTML = '<img src="my profile pic.png" alt="Muhammad Awais Laal" style="border-radius: 50%;">';
     botName.textContent = 'Muhammad Awais Laal';
 
     chatMessages.innerHTML = '';
     conversationHistory = [];
+    messageCount = 0;
     const thinking = showThinking();
     setTimeout(() => {
       thinking.remove();
-      addMessage("Hello! This is <strong>Awais</strong>. I've personally stepped in to help you. How can I assist you with your project or business needs today?", 'bot');
+      addMessage("Hey! It's Awais here 🚀 Thanks for reaching out! I'm pretty swamped with projects, but I'm here for important stuff. What's on your mind?", 'bot');
     }, 1500);
 
     chatSuggestions.innerHTML = `
-      <button class="suggestion-btn">Let's discuss a project</button>
-      <button class="suggestion-btn">View My CV</button>
-      <button class="suggestion-btn">Back to Assistant Bot</button>
+      <button class="suggestion-btn">Got a project idea</button>
+      <button class="suggestion-btn">Want to collaborate?</button>
+      <button class="suggestion-btn">Back to Assistant</button>
     `;
 
     initSuggestions();
@@ -646,21 +661,22 @@ const initChatbot = () => {
 
   const handleAISwitch = () => {
     isHumanMode = false;
-    botAvatar.innerHTML = '<img src="bot-avatar.jpg" alt="Awais Assistant">';
+    botAvatar.innerHTML = '<img src="my profile pic.png" alt="Awais Laal" style="border-radius: 50%;">';
     botName.textContent = 'Awais Assistant';
 
     chatMessages.innerHTML = '';
     conversationHistory = [];
+    messageCount = 0;
     const thinking = showThinking();
     setTimeout(() => {
       thinking.remove();
-      addMessage("I'm back! I'm the AI assistant for Awais powered by Groq AI. How can I help you explore his portfolio or answer your questions?", 'bot');
+      addMessage("Hey there! 👋 I'm Awais's AI assistant. Quick question - what brings you here today? Project ideas? Collaboration? Or just curious about what I can do? 😊", 'bot');
     }, 1000);
 
     chatSuggestions.innerHTML = `
       <button class="suggestion-btn">Tell me about Awais</button>
-      <button class="suggestion-btn">What are his skills?</button>
-      <button class="suggestion-btn">Switch to Human</button>
+      <button class="suggestion-btn">What's his expertise?</button>
+      <button class="suggestion-btn">Need project help?</button>
     `;
 
     initSuggestions();
