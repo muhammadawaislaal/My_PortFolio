@@ -728,7 +728,43 @@ const initChatbot = () => {
     setTimeout(async () => {
       thinking.remove();
       if (isHumanMode) {
-        addMessage("Got it! Shoot details to muhammadawaislaal@gmail.com or Fiverr for the fastest response 💪", 'bot');
+        // Human mode: Have real conversation for 5-6 messages before suggesting contact
+        const humanResponses = [
+          { input: ['how are you', 'how are you doing', 'whats up'], response: "Doing good! Just grinding on some AI projects 💻 How about you?" },
+          { input: ['what are you doing', 'what you up to', 'busy'], response: "Always working on something cool with AI and Python. Typical startup hustle you know? 😅" },
+          { input: ['tell me about yourself', 'who are you', 'about you'], response: "I'm a Gen AI Developer - built 5+ AI projects like YouTube summarizers, SQL agents, trading predictors. Love building things that solve real problems! 🚀" },
+          { input: ['cool', 'nice', 'awesome', 'interesting'], response: "Thanks! Always excited to work on new challenges. Do you have something in mind?" },
+          { input: ['yeah', 'yes', 'actually', 'kinda', 'maybe'], response: "Oh cool! Tell me more - what's the idea or challenge you're thinking about?" },
+          { input: ['project', 'idea', 'help', 'need', 'want'], response: "Love it! This is where things get interesting. What's the vision?" }
+        ];
+
+        let responded = false;
+        const lowerText = text.toLowerCase();
+
+        for (let resp of humanResponses) {
+          if (resp.input.some(keyword => lowerText.includes(keyword))) {
+            addMessage(resp.response, 'bot');
+            responded = true;
+            break;
+          }
+        }
+
+        if (!responded) {
+          addMessage("Sounds interesting! Tell me more about what you have in mind 👂", 'bot');
+        }
+
+        // After 6+ messages, gently suggest continuation
+        if (messageCount >= 6) {
+          setTimeout(() => {
+            const suggestion = document.createElement('div');
+            suggestion.className = 'message bot-message';
+            suggestion.style.fontSize = '0.85em';
+            suggestion.style.opacity = '0.85';
+            suggestion.innerHTML = "Note: I'm pretty swamped right now, but I'm all ears! For a detailed discussion and quick turnaround, my assistant bot is great, or email me at <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>muhammadawaislaal@gmail.com</a> 👍";
+            chatMessages.appendChild(suggestion);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }, 800);
+        }
       } else {
         const aiResponse = await callGroqAPI(text);
         addMessage(aiResponse, 'bot');
