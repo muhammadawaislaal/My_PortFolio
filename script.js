@@ -728,45 +728,82 @@ const initChatbot = () => {
     setTimeout(async () => {
       thinking.remove();
       if (isHumanMode) {
-        // Human mode: Have real conversation for 5-6 messages before suggesting contact
-        const humanResponses = [
-          { input: ['how are you', 'how are you doing', 'whats up', 'doing great', 'doing good'], response: "Awesome! 🙌 Glad to hear it. So what brings you my way?" },
-          { input: ['what are you doing', 'what you up to', 'busy'], response: "Always working on something cool with AI and Python. Typical startup hustle you know? 😅 What about you?" },
-          { input: ['tell me about yourself', 'who are you', 'about you', 'background'], response: "I'm a Gen AI Developer - built 5+ AI projects like YouTube summarizers, SQL agents, trading predictors. Love building things that solve real problems! 🚀 Curious about your idea?" },
-          { input: ['chatbot', 'ecommerce', 'store', 'project', 'idea', 'help', 'need', 'want to build'], response: "Nice! Now we're talking 💡 Tell me more - what's the scope and what's your timeline looking like?" },
-          { input: ['budget', '500', 'cost', 'price', 'pricing'], response: "Got it. $500 is a solid starting point for certain solutions. Depending on complexity and timeline, we might be able to work something out. What's your deadline looking like?" },
-          { input: ['interested', 'collaborate', 'work together', 'partnership', 'hire me'], response: "Absolutely! I'm definitely interested in exploring this 🚀 Let's keep the momentum. Best way forward: shoot me the full details to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>muhammadawaislaal@gmail.com</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> so I can give you an accurate quote & timeline. Let's make this happen! 💪" },
-          { input: ['yes', 'yeah', 'yep', 'definitely', 'absolutely'], response: "Awesome! 🎉 I'm hyped about this. For next steps and to lock in details, let's move to email or Fiverr - I can give you a proper scope & timeline there." },
-          { input: ['timeline', 'when', 'deadline', 'how long', 'asap'], response: "Smart question! Timeline depends on complexity. Simple chatbots? 1-2 weeks. Complex integrations? 3-4 weeks. Let me know your target date and we can figure it out together." },
-          { input: ['thanks', 'thank you', 'appreciate'], response: "Anytime! Happy to explore ideas. Let's keep building cool stuff together 🚀" }
+        // Human mode: Use AI with Awais's personal voice
+        const awaisSystemPrompt = `You are Muhammad Awais Laal, a Gen AI Developer responding directly. Your style:
+- Start conversations with warm greetings and genuine interest
+- Be yourself: friendly, honest, busy but engaged
+- Respond naturally to everything they say - projects, interests, questions
+- Show enthusiasm about ideas and collaboration
+- Be realistic: mention you're swamped with projects
+- End conversations by suggesting they email muhammadawaislaal@gmail.com, reach out on Fiverr (https://www.fiverr.com/pooorman?public_mode=true), or chat with your assistant
+- Keep responses 2-3 sentences, natural & conversational
+- Use occasional emojis naturally
+
+About You:
+- Gen AI Developer with 5+ successful projects
+- Super Python Trainer at Preply
+- Expert: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch
+- Always busy with projects but love new collaborations
+- Honest about workload but genuinely interested
+
+Key: Sound like a real person who's interested but realistically busy.`;
+
+        // Add to conversation history with custom system prompt
+        let awaisHistory = [
+          { role: 'system', content: awaisSystemPrompt },
+          ...conversationHistory,
+          { role: 'user', content: text }
         ];
 
-        let responded = false;
-        const lowerText = text.toLowerCase();
+        try {
+          const response = await fetch(GROQ_API_URL, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${GROQ_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'llama-3.3-70b-versatile',
+              messages: awaisHistory,
+              max_tokens: 200,
+              temperature: 0.85
+            })
+          });
 
-        for (let resp of humanResponses) {
-          if (resp.input.some(keyword => lowerText.includes(keyword))) {
-            addMessage(resp.response, 'bot');
-            responded = true;
-            break;
+          if (!response.ok) {
+            addMessage("Thanks for reaching out! Drop me a line at muhammadawaislaal@gmail.com or Fiverr - I read everything 💪", 'bot');
+          } else {
+            const data = await response.json();
+            let awaisResponse = data.choices[0].message.content;
+
+            // Add to history
+            conversationHistory.push({ role: 'user', content: text });
+            conversationHistory.push({ role: 'assistant', content: awaisResponse });
+
+            // Keep history manageable
+            if (conversationHistory.length > 12) {
+              conversationHistory = conversationHistory.slice(-12);
+            }
+
+            addMessage(awaisResponse, 'bot');
+
+            // After 5+ messages, suggest alternatives
+            if (messageCount >= 5) {
+              setTimeout(() => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'message bot-message';
+                suggestion.style.fontSize = '0.85em';
+                suggestion.style.opacity = '0.85';
+                suggestion.style.marginTop = '8px';
+                suggestion.innerHTML = "P.S. - I'm pretty swamped right now, but genuinely interested! For proper scope & timeline, kindly chat with my <a href='#' onclick='handleAISwitch(); return false;' style='color: var(--neon-cyan); text-decoration: underline;'>assistant</a>, or drop a message to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> / <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> 👍";
+                chatMessages.appendChild(suggestion);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }, 800);
+            }
           }
-        }
-
-        if (!responded) {
-          addMessage("Gotcha! So what exactly are you looking to build or explore? 🤔", 'bot');
-        }
-
-        // After 6+ messages, gently suggest continuation
-        if (messageCount >= 6) {
-          setTimeout(() => {
-            const suggestion = document.createElement('div');
-            suggestion.className = 'message bot-message';
-            suggestion.style.fontSize = '0.85em';
-            suggestion.style.opacity = '0.85';
-            suggestion.innerHTML = "Real talk: I'm pretty swamped right now, but this sounds promising! For proper scope, timeline & pricing, let's take it to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>muhammadawaislaal@gmail.com</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> where I can give you my best shot 👍";
-            chatMessages.appendChild(suggestion);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-          }, 800);
+        } catch (error) {
+          console.error('Error in human mode:', error);
+          addMessage("Hey, seems like a connection hiccup. Reach out directly at muhammadawaislaal@gmail.com! 💪", 'bot');
         }
       } else {
         const aiResponse = await callGroqAPI(text);
