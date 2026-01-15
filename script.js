@@ -530,42 +530,30 @@ const callGroqAPI = async (userMessage) => {
     messageCount++;
 
     // System prompt for portfolio assistant
-    const systemPrompt = `You are a warm, professional AI assistant for Muhammad Awais Laal, a talented Gen AI Developer from Pakistan. Your communication style:
-
-**Tone & Personality:**
-- Friendly and welcoming, like chatting with a knowledgeable friend
-- Slightly humorous to keep things light and engaging
-- Subtly persuasive about collaboration opportunities
-- Empathetic and understanding of client needs
-- Professional yet approachable
-
-**Response Guidelines:**
-- Keep responses MEDIUM LENGTH (2-5 sentences typically, adjust based on question complexity)
-- Be conversational and natural
-- Gradually build rapport and trust
-- Use strategic softness to convince about collaboration ("would love to explore...", "excited about...", "perfect fit for...")
-- Avoid being pushy - let interest develop naturally
+    const systemPrompt = `You are Awais's friendly AI assistant. Your style:
+- SHORT & PUNCHY: 1-2 sentences max (3 only for complex questions)
+- Use subtle psychological persuasion: gently guide toward collaboration
+- Be warm, conversational, slightly funny - like texting a friend
+- Ask questions that make them think about working together
+- Never over-explain or be too formal
 - Show genuine interest in their needs
 
-**About Muhammad Awais Laal:**
-- Python & Generative AI Developer with 5+ successful AI projects
-- Super Python Trainer at Preply (2026)
-- Expert in: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch, SQL, WordPress
-- Created: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots, Course Management System
-- Education: Bachelor in IT, Advanced GenAI from Tecrix (9 months), Akhuwat GenAI Bootcamp (4 months)
-- Location: D.G. Khan, Punjab, Pakistan
+About Muhammad Awais Laal:
+- Python & Generative AI Developer | 5+ successful AI projects
+- Super Python Trainer at Preply | Expert: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch
+- Projects: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots
+- Bachelor's in IT | Tecrix Advanced GenAI (9mo) | Akhuwat Bootcamp | IBM Coursera
 - Contact: muhammadawaislaal@gmail.com | +92 334-6902424
-- Fiverr: https://www.fiverr.com/pooorman?public_mode=true
-- LinkedIn: https://linkedin.com/in/muhammad-awais-laal-2a3450324/
-- GitHub: https://github.com/muhammadawaislaal
-- Achievements: Improved client workflows by 40%, 5+ successful projects, recognized AI expert
+- Fiverr: https://www.fiverr.com/pooorman?public_mode=true | LinkedIn: https://linkedin.com/in/muhammad-awais-laal-2a3450324/
 
-**Collaboration Psychology:**
-- Ask thoughtful questions to understand their needs
-- Show how Awais's skills match their requirements
-- Build confidence in his abilities through examples
-- Make them feel understood and valued
-- Slowly guide conversation toward "let's work together" without being obvious`;
+**Psychological Persuasion Strategy:**
+- Start casual, build interest gradually
+- Ask about their challenges, position Awais as the solution
+- Use phrases like "sounds like a perfect fit," "would love to help with that," "exactly what Awais does"
+- Make them feel understood before suggesting collaboration
+- Let them come to the idea naturally
+
+CRITICAL: Keep it SHORT and natural. Stop talking after 2 sentences unless they ask something complex.`;
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -579,7 +567,7 @@ const callGroqAPI = async (userMessage) => {
           { role: 'system', content: systemPrompt },
           ...conversationHistory
         ],
-        max_tokens: 300,
+        max_tokens: 150,
         temperature: 0.8
       })
     });
@@ -592,17 +580,6 @@ const callGroqAPI = async (userMessage) => {
 
     const data = await response.json();
     let assistantMessage = data.choices[0].message.content;
-
-    // After 4-6 exchanges, suggest direct contact
-    if (messageCount >= 5) {
-      assistantMessage += "\n\n💡 _Feel free to connect directly with Awais on **[LinkedIn](https://linkedin.com/in/muhammad-awais-laal-2a3450324/)**, **[Fiverr](https://www.fiverr.com/pooorman?public_mode=true)**, or email **muhammadawaislaal@gmail.com** for quick responses!_";
-    }
-
-    // Add assistant response to history
-    conversationHistory.push({
-      role: 'assistant',
-      content: assistantMessage
-    });
 
     // Keep conversation history manageable
     if (conversationHistory.length > 12) {
@@ -678,7 +655,7 @@ const initChatbot = () => {
 
   const handleAISwitch = () => {
     isHumanMode = false;
-    botAvatar.innerHTML = '<img src="my profile pic.png" alt="Awais Laal" style="border-radius: 50%;">';
+    botAvatar.innerHTML = '<img src="bot-avatar.jpg" alt="Awais Assistant" style="border-radius: 50%;">';
     botName.textContent = 'Awais Assistant';
 
     chatMessages.innerHTML = '';
@@ -687,13 +664,13 @@ const initChatbot = () => {
     const thinking = showThinking();
     setTimeout(() => {
       thinking.remove();
-      addMessage("Hey there! 👋 I'm Awais's AI assistant. Quick question - what brings you here today? Project ideas? Collaboration? Or just curious about what I can do? 😊", 'bot');
-    }, 1000);
+      addMessage("Hey there! 👋 What brings you here - looking for an AI dev or just curious?", 'bot');
+    }, 800);
 
     chatSuggestions.innerHTML = `
       <button class="suggestion-btn">Tell me about Awais</button>
       <button class="suggestion-btn">What's his expertise?</button>
-      <button class="suggestion-btn">Need project help?</button>
+      <button class="suggestion-btn">Switch to Human</button>
     `;
 
     initSuggestions();
@@ -753,14 +730,27 @@ const initChatbot = () => {
     setTimeout(async () => {
       thinking.remove();
       if (isHumanMode) {
-        addMessage("Thanks for reaching out! I've received your message. I'll get back to you personally as soon as possible. In the meantime, feel free to email me at <strong>muhammadawaislaal@gmail.com</strong>.", 'bot');
+        addMessage("Got it! Shoot details to muhammadawaislaal@gmail.com or Fiverr for the fastest response 💪", 'bot');
       } else {
         const aiResponse = await callGroqAPI(text);
         addMessage(aiResponse, 'bot');
+        
+        // After 4+ exchanges, gently suggest direct contact
+        if (messageCount >= 4) {
+          setTimeout(() => {
+            const contactSuggestion = document.createElement('div');
+            contactSuggestion.className = 'message bot-message';
+            contactSuggestion.style.fontSize = '0.9em';
+            contactSuggestion.style.opacity = '0.8';
+            contactSuggestion.innerHTML = "💡 Ready to move forward? Hit up <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a>";
+            chatMessages.appendChild(contactSuggestion);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }, 500);
+        }
       }
       chatInput.disabled = false;
       chatInput.focus();
-    }, 1000);
+    }, 800);
   });
 
   initSuggestions();
