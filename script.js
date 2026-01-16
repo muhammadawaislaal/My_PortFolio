@@ -66,10 +66,51 @@ const hideLoading = () => {
   document.getElementById('loadingSpinner').classList.remove('active');
 };
 
+// Mobile menu toggle
+const initMobileMenu = () => {
+  const mobileMenuToggle = document.querySelector('[data-mobile-menu-toggle]');
+  const navbar = document.querySelector('.navbar');
+  const navbarList = document.querySelector('[data-navbar-list]');
+
+  if (!mobileMenuToggle || !navbar) return;
+
+  const toggleMobileMenu = () => {
+    toggleElement(navbar);
+    toggleElement(navbarList);
+  };
+
+  mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+  mobileMenuToggle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleMobileMenu();
+    }
+  });
+
+  // Close mobile menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!mobileMenuToggle.contains(e.target) && !navbar.contains(e.target) && 
+        !navbarList.contains(e.target) && window.innerWidth <= 768) {
+      navbar.classList.remove('active');
+      navbarList.classList.remove('active');
+    }
+  });
+
+  // Close mobile menu when resizing to larger screen
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      navbar.classList.remove('active');
+      navbarList.classList.remove('active');
+    }
+  });
+};
+
 // Sidebar toggle
 const initSidebar = () => {
   const sidebar = document.querySelector('[data-sidebar]');
   const sidebarBtn = document.querySelector('[data-sidebar-btn]');
+
+  if (!sidebar || !sidebarBtn) return;
 
   const toggleSidebar = () => toggleElement(sidebar);
 
@@ -80,6 +121,14 @@ const initSidebar = () => {
       toggleSidebar();
     }
   });
+
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768 && sidebarBtn && !sidebarBtn.contains(e.target) && 
+        !sidebar.contains(e.target) && sidebar.classList.contains('active')) {
+      toggleSidebar();
+    }
+  });
 };
 
 // Navbar toggle for mobile
@@ -87,7 +136,11 @@ const initNavbar = () => {
   const navbarToggle = document.querySelector('[data-navbar-toggle]');
   const navbarList = document.querySelector('[data-navbar-list]');
 
-  const toggleNavbar = () => toggleElement(navbarList);
+  if (!navbarToggle || !navbarList) return;
+
+  const toggleNavbar = () => {
+    toggleElement(navbarList);
+  };
 
   navbarToggle.addEventListener('click', toggleNavbar);
   navbarToggle.addEventListener('keydown', (e) => {
@@ -97,10 +150,11 @@ const initNavbar = () => {
     }
   });
 
-  // Close navbar when clicking outside
+  // Close navbar when clicking outside on mobile
   document.addEventListener('click', (e) => {
-    if (!navbarToggle.contains(e.target) && !navbarList.contains(e.target)) {
-      navbarList.classList.remove('active');
+    if (window.innerWidth <= 768 && navbarToggle && !navbarToggle.contains(e.target) && 
+        !navbarList.contains(e.target) && navbarList.classList.contains('active')) {
+      toggleNavbar();
     }
   });
 };
@@ -109,7 +163,9 @@ const initNavbar = () => {
 const initThemeToggle = () => {
   const themeToggle = document.querySelector('.theme-toggle');
   const body = document.body;
-  const icon = themeToggle.querySelector('ion-icon');
+  const icon = themeToggle?.querySelector('ion-icon');
+
+  if (!themeToggle || !icon) return;
 
   // Check for saved theme preference or default to light
   const savedTheme = localStorage.getItem('theme') || 'light-theme';
@@ -166,6 +222,13 @@ const initFiverrMessages = () => {
   fiverrBtn.addEventListener('mouseleave', hideMessage);
   fiverrBtn.addEventListener('focus', showMessage);
   fiverrBtn.addEventListener('blur', hideMessage);
+  
+  // Touch support for mobile
+  fiverrBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    showMessage();
+    setTimeout(hideMessage, 3000);
+  });
 };
 
 // Portfolio filtering
@@ -174,6 +237,9 @@ const initPortfolioFilter = () => {
   const selectItems = document.querySelectorAll('[data-select-item]');
   const selectValue = document.querySelector('[data-select-value]');
   const filterButtons = document.querySelectorAll('[data-filter-btn]');
+  
+  if (!select || !selectValue || filterButtons.length === 0) return;
+  
   let lastClickedBtn = filterButtons[0];
 
   const filterFunc = (selectedValue) => {
@@ -211,7 +277,7 @@ const initPortfolioFilter = () => {
         const selectedValue = hash;
         selectValue.textContent = targetBtn.textContent;
         filterFunc(selectedValue);
-        lastClickedBtn.classList.remove('active');
+        lastClickedBtn?.classList.remove('active');
         targetBtn.classList.add('active');
         lastClickedBtn = targetBtn;
       }
@@ -238,7 +304,7 @@ const initPortfolioFilter = () => {
         btn.textContent.toLowerCase() === selectedValue
       );
       if (correspondingBtn) {
-        lastClickedBtn.classList.remove('active');
+        lastClickedBtn?.classList.remove('active');
         correspondingBtn.classList.add('active');
         lastClickedBtn = correspondingBtn;
       }
@@ -250,7 +316,7 @@ const initPortfolioFilter = () => {
       const selectedValue = btn.textContent.toLowerCase();
       selectValue.textContent = btn.textContent;
       filterFunc(selectedValue);
-      lastClickedBtn.classList.remove('active');
+      lastClickedBtn?.classList.remove('active');
       btn.classList.add('active');
       lastClickedBtn = btn;
     });
@@ -258,7 +324,7 @@ const initPortfolioFilter = () => {
 
   // Close select when clicking outside
   document.addEventListener('click', (e) => {
-    if (!select.contains(e.target)) {
+    if (select && !select.contains(e.target)) {
       select.classList.remove('active');
     }
   });
@@ -271,6 +337,9 @@ const initContactForm = () => {
   const form = document.querySelector('[data-form]');
   const formInputs = document.querySelectorAll('[data-form-input]');
   const formBtn = document.querySelector('[data-form-btn]');
+  
+  if (!form || !formBtn) return;
+  
   const formBtnText = formBtn.querySelector('span');
 
   const validateForm = () => {
@@ -347,6 +416,10 @@ const initNavigation = () => {
   const navigationLinks = document.querySelectorAll('[data-nav-link]');
   const pages = document.querySelectorAll('[data-page]');
   const navbarList = document.querySelector('[data-navbar-list]');
+  const mobileMenuToggle = document.querySelector('[data-mobile-menu-toggle]');
+  const navbar = document.querySelector('.navbar');
+
+  if (navigationLinks.length === 0 || pages.length === 0) return;
 
   const navigateToPage = (targetPage) => {
     // Update page visibility
@@ -362,9 +435,14 @@ const initNavigation = () => {
     // Scroll to top with smooth behavior
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Close mobile navbar if open
-    if (navbarList.classList.contains('active')) {
-      toggleElement(navbarList);
+    // Close mobile navbar and menu if open
+    if (window.innerWidth <= 768) {
+      if (navbarList?.classList.contains('active')) {
+        toggleElement(navbarList);
+      }
+      if (navbar?.classList.contains('active')) {
+        toggleElement(navbar);
+      }
     }
 
     // Update URL for deep linking
@@ -464,7 +542,6 @@ const initImagePreload = () => {
     './assets/images/sql-agent.png',
     './assets/images/business-analyst-chatbot.png',
     './assets/images/signal-predict.png',
-    './assets/images/churn-modeling.png',
     './assets/images/genix-ai.png'
   ];
 
@@ -509,6 +586,58 @@ const initErrorHandling = () => {
     console.error('Unhandled promise rejection:', e.reason);
     e.preventDefault();
   });
+};
+
+// Responsive adjustments
+const initResponsiveFeatures = () => {
+  // Adjust layout on resize
+  const handleResize = debounce(() => {
+    // Close mobile menus on desktop
+    if (window.innerWidth > 768) {
+      const navbar = document.querySelector('.navbar');
+      const navbarList = document.querySelector('[data-navbar-list]');
+      const sidebar = document.querySelector('[data-sidebar]');
+      
+      if (navbar?.classList.contains('active')) navbar.classList.remove('active');
+      if (navbarList?.classList.contains('active')) navbarList.classList.remove('active');
+      if (sidebar?.classList.contains('active')) sidebar.classList.remove('active');
+    }
+    
+    // Adjust scroll animations for mobile
+    const clientsList = document.querySelector('.clients-list');
+    const testimonialsList = document.querySelector('.testimonials-list');
+    const languagesList = document.querySelector('.languages-list');
+    
+    if (window.innerWidth <= 480) {
+      // Pause scroll animations on very small screens
+      if (clientsList) clientsList.style.animationPlayState = 'paused';
+      if (testimonialsList) testimonialsList.style.animationPlayState = 'paused';
+      if (languagesList) languagesList.style.animationPlayState = 'paused';
+    } else {
+      // Resume scroll animations
+      if (clientsList) clientsList.style.animationPlayState = 'running';
+      if (testimonialsList) testimonialsList.style.animationPlayState = 'running';
+      if (languagesList) languagesList.style.animationPlayState = 'running';
+    }
+  }, 250);
+  
+  window.addEventListener('resize', handleResize);
+  handleResize(); // Initial call
+};
+
+// Touch device detection
+const initTouchDetection = () => {
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  if (isTouchDevice) {
+    document.body.classList.add('touch-device');
+    
+    // Add touch-specific optimizations
+    const links = document.querySelectorAll('a, button');
+    links.forEach(link => {
+      link.style.cursor = 'pointer';
+    });
+  }
 };
 
 // Groq AI API Integration - Secure Configuration
@@ -660,12 +789,14 @@ const initChatbot = () => {
   const botAvatar = document.getElementById('botAvatar');
   const botName = document.getElementById('botName');
 
+  if (!chatbotToggle || !chatWindow) return;
+
   let isHumanMode = false;
 
   const toggleChat = () => chatWindow.classList.toggle('active');
 
   chatbotToggle.addEventListener('click', toggleChat);
-  chatClose.addEventListener('click', toggleChat);
+  if (chatClose) chatClose.addEventListener('click', toggleChat);
 
   const addMessage = (text, sender) => {
     const msgDiv = document.createElement('div');
@@ -772,21 +903,22 @@ const initChatbot = () => {
     });
   };
 
-  chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = chatInput.value.trim();
-    if (!text) return;
+  if (chatForm) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
 
-    addMessage(text, 'user');
-    chatInput.value = '';
-    chatInput.disabled = true;
+      addMessage(text, 'user');
+      chatInput.value = '';
+      chatInput.disabled = true;
 
-    const thinking = showThinking();
-    setTimeout(async () => {
-      thinking.remove();
-      if (isHumanMode) {
-        // Human mode: Use AI with Awais's personal voice
-        const awaisSystemPrompt = `You are Muhammad Awais Laal, a Gen AI Developer responding directly. Your style:
+      const thinking = showThinking();
+      setTimeout(async () => {
+        thinking.remove();
+        if (isHumanMode) {
+          // Human mode: Use AI with Awais's personal voice
+          const awaisSystemPrompt = `You are Muhammad Awais Laal, a Gen AI Developer responding directly. Your style:
 - Start conversations with warm greetings and genuine interest
 - Be yourself: friendly, honest, busy but engaged
 - Respond naturally to everything they say - projects, interests, questions
@@ -805,84 +937,85 @@ About You:
 
 Key: Sound like a real person who's interested but realistically busy.`;
 
-        // Add to conversation history with custom system prompt
-        let awaisHistory = [
-          { role: 'system', content: awaisSystemPrompt },
-          ...conversationHistory,
-          { role: 'user', content: text }
-        ];
+          // Add to conversation history with custom system prompt
+          let awaisHistory = [
+            { role: 'system', content: awaisSystemPrompt },
+            ...conversationHistory,
+            { role: 'user', content: text }
+          ];
 
-        try {
-          const response = await fetch(GROQ_API_URL, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${GROQ_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages: awaisHistory,
-              max_tokens: 200,
-              temperature: 0.85
-            })
-          });
+          try {
+            const response = await fetch(GROQ_API_URL, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: awaisHistory,
+                max_tokens: 200,
+                temperature: 0.85
+              })
+            });
 
-          if (!response.ok) {
-            addMessage("Thanks for reaching out! Drop me a line at muhammadawaislaal@gmail.com or Fiverr - I read everything 💪", 'bot');
-          } else {
-            const data = await response.json();
-            let awaisResponse = data.choices[0].message.content;
+            if (!response.ok) {
+              addMessage("Thanks for reaching out! Drop me a line at muhammadawaislaal@gmail.com or Fiverr - I read everything 💪", 'bot');
+            } else {
+              const data = await response.json();
+              let awaisResponse = data.choices[0].message.content;
 
-            // Add to history
-            conversationHistory.push({ role: 'user', content: text });
-            conversationHistory.push({ role: 'assistant', content: awaisResponse });
+              // Add to history
+              conversationHistory.push({ role: 'user', content: text });
+              conversationHistory.push({ role: 'assistant', content: awaisResponse });
 
-            // Keep history manageable
-            if (conversationHistory.length > 12) {
-              conversationHistory = conversationHistory.slice(-12);
+              // Keep history manageable
+              if (conversationHistory.length > 12) {
+                conversationHistory = conversationHistory.slice(-12);
+              }
+
+              addMessage(awaisResponse, 'bot');
+
+              // After 5+ messages, suggest alternatives
+              if (messageCount >= 5) {
+                setTimeout(() => {
+                  const suggestion = document.createElement('div');
+                  suggestion.className = 'message bot-message';
+                  suggestion.style.fontSize = '0.85em';
+                  suggestion.style.opacity = '0.85';
+                  suggestion.style.marginTop = '8px';
+                  suggestion.innerHTML = "P.S. - I'm pretty swamped right now, but genuinely interested! For proper scope & timeline, kindly chat with my <a href='#' onclick='handleAISwitch(); return false;' style='color: var(--neon-cyan); text-decoration: underline;'>assistant</a>, or drop a message to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> / <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> 👍";
+                  chatMessages.appendChild(suggestion);
+                  chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 800);
+              }
             }
-
-            addMessage(awaisResponse, 'bot');
-
-            // After 5+ messages, suggest alternatives
-            if (messageCount >= 5) {
-              setTimeout(() => {
-                const suggestion = document.createElement('div');
-                suggestion.className = 'message bot-message';
-                suggestion.style.fontSize = '0.85em';
-                suggestion.style.opacity = '0.85';
-                suggestion.style.marginTop = '8px';
-                suggestion.innerHTML = "P.S. - I'm pretty swamped right now, but genuinely interested! For proper scope & timeline, kindly chat with my <a href='#' onclick='handleAISwitch(); return false;' style='color: var(--neon-cyan); text-decoration: underline;'>assistant</a>, or drop a message to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> / <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> 👍";
-                chatMessages.appendChild(suggestion);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-              }, 800);
-            }
+          } catch (error) {
+            console.error('Error in human mode:', error);
+            addMessage("Hey, seems like a connection hiccup. Reach out directly at muhammadawaislaal@gmail.com! 💪", 'bot');
           }
-        } catch (error) {
-          console.error('Error in human mode:', error);
-          addMessage("Hey, seems like a connection hiccup. Reach out directly at muhammadawaislaal@gmail.com! 💪", 'bot');
+        } else {
+          const aiResponse = await callGroqAPI(text);
+          addMessage(aiResponse, 'bot');
+          
+          // After 4+ exchanges, gently suggest direct contact
+          if (messageCount >= 4) {
+            setTimeout(() => {
+              const contactSuggestion = document.createElement('div');
+              contactSuggestion.className = 'message bot-message';
+              contactSuggestion.style.fontSize = '0.9em';
+              contactSuggestion.style.opacity = '0.8';
+              contactSuggestion.innerHTML = "💡 Ready to move forward? Hit up <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a>";
+              chatMessages.appendChild(contactSuggestion);
+              chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 500);
+          }
         }
-      } else {
-        const aiResponse = await callGroqAPI(text);
-        addMessage(aiResponse, 'bot');
-        
-        // After 4+ exchanges, gently suggest direct contact
-        if (messageCount >= 4) {
-          setTimeout(() => {
-            const contactSuggestion = document.createElement('div');
-            contactSuggestion.className = 'message bot-message';
-            contactSuggestion.style.fontSize = '0.9em';
-            contactSuggestion.style.opacity = '0.8';
-            contactSuggestion.innerHTML = "💡 Ready to move forward? Hit up <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a>";
-            chatMessages.appendChild(contactSuggestion);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-          }, 500);
-        }
-      }
-      chatInput.disabled = false;
-      chatInput.focus();
-    }, 800);
-  });
+        chatInput.disabled = false;
+        chatInput.focus();
+      }, 800);
+    });
+  }
 
   initSuggestions();
 };
@@ -890,6 +1023,8 @@ Key: Sound like a real person who's interested but realistically busy.`;
 // Initialize all features with error handling
 const init = () => {
   try {
+    initTouchDetection();
+    initMobileMenu();
     initSidebar();
     initNavbar();
     initThemeToggle();
@@ -901,6 +1036,7 @@ const init = () => {
     initImagePreload();
     initPerformanceMonitoring();
     initErrorHandling();
+    initResponsiveFeatures();
     initChatbot();
     initChatbotGreeting();
 
