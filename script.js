@@ -1,6 +1,15 @@
 'use strict';
 
 /**
+ * Mobile Responsive Enhancements
+ */
+
+// Check if device is mobile
+const isMobile = () => window.innerWidth <= 768;
+const isTablet = () => window.innerWidth > 768 && window.innerWidth <= 1024;
+const isDesktop = () => window.innerWidth > 1024;
+
+/**
  * Utility: Toggle element's active class
  * @param {HTMLElement} elem - Element to toggle
  */
@@ -21,7 +30,7 @@ const debounce = (func, delay) => {
 };
 
 /**
- * Utility: Throttle function for scroll/resize events
+ * Utility: Throttle function to limit event frequency
  * @param {Function} func - Function to throttle
  * @param {number} limit - Minimum interval in milliseconds
  * @returns {Function} Throttled function
@@ -71,6 +80,11 @@ const initSidebar = () => {
   const sidebar = document.querySelector('[data-sidebar]');
   const sidebarBtn = document.querySelector('[data-sidebar-btn]');
 
+  // Auto-expand sidebar on desktop
+  if (isDesktop()) {
+    sidebar.classList.add('active');
+  }
+
   const toggleSidebar = () => toggleElement(sidebar);
 
   sidebarBtn.addEventListener('click', toggleSidebar);
@@ -80,52 +94,65 @@ const initSidebar = () => {
       toggleSidebar();
     }
   });
-
-  // Close sidebar when clicking outside on mobile
-  if (window.innerWidth <= 767) {
-    document.addEventListener('click', (e) => {
-      if (sidebar.classList.contains('active') && 
-          !sidebar.contains(e.target) && 
-          !sidebarBtn.contains(e.target)) {
-        sidebar.classList.remove('active');
-      }
-    });
-  }
 };
 
 // Navbar toggle for mobile
 const initNavbar = () => {
   const navbarToggle = document.querySelector('[data-navbar-toggle]');
   const navbarList = document.querySelector('[data-navbar-list]');
+  const navbarLinks = document.querySelectorAll('.navbar-link');
 
-  const toggleNavbar = () => toggleElement(navbarList);
+  const toggleNavbar = () => {
+    toggleElement(navbarList);
+    // Toggle aria-expanded for accessibility
+    const isExpanded = navbarList.classList.contains('active');
+    navbarToggle.setAttribute('aria-expanded', isExpanded);
+  };
 
-  if (navbarToggle) {
-    navbarToggle.addEventListener('click', toggleNavbar);
-    navbarToggle.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleNavbar();
-      }
-    });
+  navbarToggle.addEventListener('click', toggleNavbar);
+  navbarToggle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleNavbar();
+    }
+  });
 
-    // Close navbar when clicking outside on mobile
-    document.addEventListener('click', (e) => {
-      if (window.innerWidth <= 767 && 
-          navbarList.classList.contains('active') && 
-          !navbarToggle.contains(e.target) && 
-          !navbarList.contains(e.target)) {
+  // Close navbar when clicking on a link (mobile only)
+  navbarLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (isMobile() || isTablet()) {
         navbarList.classList.remove('active');
+        navbarToggle.setAttribute('aria-expanded', 'false');
       }
     });
+  });
 
-    // Close navbar when clicking a link
-    navbarList.addEventListener('click', (e) => {
-      if (window.innerWidth <= 767 && e.target.closest('.navbar-link')) {
-        navbarList.classList.remove('active');
-      }
-    });
-  }
+  // Close navbar when clicking outside (mobile only)
+  document.addEventListener('click', (e) => {
+    if ((isMobile() || isTablet()) && 
+        !navbarToggle.contains(e.target) && 
+        !navbarList.contains(e.target) &&
+        navbarList.classList.contains('active')) {
+      navbarList.classList.remove('active');
+      navbarToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Hide navbar toggle on desktop
+  const handleResize = () => {
+    if (isDesktop()) {
+      navbarToggle.style.display = 'none';
+      navbarList.classList.remove('active');
+    } else {
+      navbarToggle.style.display = 'flex';
+    }
+  };
+
+  // Initial check
+  handleResize();
+  
+  // Listen for resize events
+  window.addEventListener('resize', debounce(handleResize, 250));
 };
 
 // Theme toggle
@@ -160,17 +187,17 @@ const initChatbotGreeting = () => {
     greetingBubble.classList.add('active');
     setTimeout(() => {
       greetingBubble.classList.remove('active');
-    }, 4000);
+    }, 4000); // Visible for 4s
   };
 
   // Initial delay
   setTimeout(showGreeting, 2000);
 
-  // Repeat every 10 seconds
+  // Repeat every 10 seconds (including visibility time)
   setInterval(showGreeting, 10000);
 };
 
-// Fiverr message display
+// Fiverr message display (Static Hover Only)
 const initFiverrMessages = () => {
   const messageElement = document.getElementById('fiverr-message');
   const fiverrBtn = document.querySelector('.fiverr-btn');
@@ -189,8 +216,8 @@ const initFiverrMessages = () => {
   fiverrBtn.addEventListener('mouseleave', hideMessage);
   fiverrBtn.addEventListener('focus', showMessage);
   fiverrBtn.addEventListener('blur', hideMessage);
-
-  // Touch events for mobile
+  
+  // For touch devices
   fiverrBtn.addEventListener('touchstart', showMessage);
   fiverrBtn.addEventListener('touchend', hideMessage);
 };
@@ -201,10 +228,6 @@ const initPortfolioFilter = () => {
   const selectItems = document.querySelectorAll('[data-select-item]');
   const selectValue = document.querySelector('[data-select-value]');
   const filterButtons = document.querySelectorAll('[data-filter-btn]');
-  
-  // Check if elements exist
-  if (!select || !selectValue) return;
-  
   let lastClickedBtn = filterButtons[0];
 
   const filterFunc = (selectedValue) => {
@@ -225,6 +248,10 @@ const initPortfolioFilter = () => {
         item.style.transition = '';
       }, 400);
     });
+
+    // Update URL hash for deep linking
+    const newHash = selectedValue === 'all' ? '' : `#${selectedValue}`;
+    history.replaceState(null, null, newHash);
   };
 
   // Initialize from URL hash
@@ -245,15 +272,13 @@ const initPortfolioFilter = () => {
     }
   };
 
-  if (select) {
-    select.addEventListener('click', () => toggleElement(select));
-    select.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleElement(select);
-      }
-    });
-  }
+  select.addEventListener('click', () => toggleElement(select));
+  select.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleElement(select);
+    }
+  });
 
   selectItems.forEach(item => {
     item.addEventListener('click', () => {
@@ -287,7 +312,7 @@ const initPortfolioFilter = () => {
 
   // Close select when clicking outside
   document.addEventListener('click', (e) => {
-    if (select && !select.contains(e.target)) {
+    if (!select.contains(e.target)) {
       select.classList.remove('active');
     }
   });
@@ -298,8 +323,6 @@ const initPortfolioFilter = () => {
 // Contact form handling
 const initContactForm = () => {
   const form = document.querySelector('[data-form]');
-  if (!form) return;
-
   const formInputs = document.querySelectorAll('[data-form-input]');
   const formBtn = document.querySelector('[data-form-btn]');
   const formBtnText = formBtn.querySelector('span');
@@ -346,7 +369,7 @@ const initContactForm = () => {
     formBtnText.textContent = 'Sending...';
 
     try {
-      // Simulate form submission
+      // Simulate form submission - Replace with actual form handling
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Here you would typically send the form data to your backend
@@ -357,7 +380,7 @@ const initContactForm = () => {
 
       showNotification('Message sent successfully! I\'ll get back to you soon.', 'success');
       form.reset();
-      validateForm();
+      validateForm(); // Reset button state
 
     } catch (error) {
       console.error('Form submission error:', error);
@@ -395,7 +418,7 @@ const initNavigation = () => {
 
     // Close mobile navbar if open
     if (navbarList && navbarList.classList.contains('active')) {
-      toggleElement(navbarList);
+      navbarList.classList.remove('active');
     }
 
     // Update URL for deep linking
@@ -429,16 +452,13 @@ const initNavigation = () => {
     const hash = window.location.hash.replace('#', '');
     if (hash && Array.from(navigationLinks).some(link => link.textContent.toLowerCase() === hash)) {
       navigateToPage(hash);
-    } else {
-      // Default to about page
-      navigateToPage('about');
     }
   };
 
   initializeFromHash();
 };
 
-// Section animations with Intersection Observer
+// Section animations with enhanced Intersection Observer
 const initSectionAnimations = () => {
   if (!('IntersectionObserver' in window)) {
     // Fallback for browsers without Intersection Observer support
@@ -447,6 +467,7 @@ const initSectionAnimations = () => {
     return;
   }
 
+  // Enhanced section observer with staggered animation
   const animateSections = document.querySelectorAll('.animate-section');
   const sectionObserver = new IntersectionObserver(
     throttle((entries) => {
@@ -467,38 +488,159 @@ const initSectionAnimations = () => {
   );
 
   animateSections.forEach(section => sectionObserver.observe(section));
+
+  // Enhanced glow animation observer
+  const glowElements = document.querySelectorAll('.glow-border-rainbow');
+  const glowObserver = new IntersectionObserver(
+    throttle((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+        } else {
+          entry.target.style.animationPlayState = 'paused';
+        }
+      });
+    }, 100),
+    { threshold: 0.1 }
+  );
+
+  glowElements.forEach(item => {
+    item.style.animationPlayState = 'paused';
+    glowObserver.observe(item);
+  });
 };
 
-// Groq AI API Integration
-let GROQ_API_KEY = null;
-let conversationHistory = [];
-let messageCount = 0;
+// Image lazy loading optimization
+const initImageOptimization = () => {
+  // Set up lazy loading for images
+  const images = document.querySelectorAll('img[loading="lazy"]');
+  
+  if ('IntersectionObserver' in window) {
+    const imageObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.src = img.dataset.src || img.src;
+          imageObserver.unobserve(img);
+        }
+      });
+    }, {
+      rootMargin: '50px 0px'
+    });
 
-// Load API Key securely
+    images.forEach(img => {
+      if (img.dataset.src) {
+        imageObserver.observe(img);
+      }
+    });
+  }
+};
+
+// Performance monitoring
+const initPerformanceMonitoring = () => {
+  // Monitor Core Web Vitals
+  if ('PerformanceObserver' in window) {
+    const observer = new PerformanceObserver((list) => {
+      list.getEntries().forEach((entry) => {
+        console.log(`${entry.name}: ${entry.value}`);
+      });
+    });
+
+    try {
+      observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'cumulative-layout-shift'] });
+    } catch (e) {
+      console.log('Performance monitoring not supported');
+    }
+  }
+
+  // Log page load time
+  window.addEventListener('load', () => {
+    const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+    console.log(`Page load time: ${loadTime}ms`);
+  });
+};
+
+// Enhanced error handling
+const initErrorHandling = () => {
+  window.addEventListener('error', (e) => {
+    console.error('Global error:', e.error);
+    // You can send this to your error tracking service
+  });
+
+  window.addEventListener('unhandledrejection', (e) => {
+    console.error('Unhandled promise rejection:', e.reason);
+    e.preventDefault();
+  });
+};
+
+// Groq AI API Integration - Secure Configuration
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+// Load API Key securely from localStorage or env
+let GROQ_API_KEY = null;
+
+// Try to load API key from localStorage (set by user or from env.txt locally)
 const loadAPIKey = async () => {
-  // Check localStorage
+  // First check localStorage
   if (localStorage.getItem('groq_api_key')) {
     GROQ_API_KEY = localStorage.getItem('groq_api_key');
     return GROQ_API_KEY;
   }
 
+  // For localhost development, try to load from env.txt
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    try {
+      const response = await fetch('env.txt');
+      if (response.ok) {
+        const text = await response.text();
+        const match = text.match(/GROQ_API_KEY=(.+)/);
+        if (match) {
+          GROQ_API_KEY = match[1].trim();
+          return GROQ_API_KEY;
+        }
+      }
+    } catch (e) {
+      console.log('Could not load env.txt - running in fallback mode');
+    }
+  } else {
+    // For GitHub Pages, try to load from raw GitHub content
+    try {
+      const response = await fetch('https://raw.githubusercontent.com/muhammadawaislaal/My_PortFolio/main/env.txt');
+      if (response.ok) {
+        const text = await response.text();
+        const match = text.match(/GROQ_API_KEY=(.+)/);
+        if (match) {
+          GROQ_API_KEY = match[1].trim();
+          return GROQ_API_KEY;
+        }
+      }
+    } catch (e) {
+      console.log('Could not load API key from GitHub');
+    }
+  }
+
   return null;
 };
 
-// Initialize API key
+// Initialize API key on page load
 loadAPIKey().then(key => {
   if (!key) {
-    console.warn('Groq API Key not found. AI features will be limited.');
+    console.warn('Groq API Key not found. AI features will be limited. For full functionality, add your API key to localStorage: localStorage.setItem("groq_api_key", "your_key_here")');
   }
 });
 
+let conversationHistory = [];
+let messageCount = 0;
+
 // Function to call Groq API
 const callGroqAPI = async (userMessage) => {
+  // Check if API key is available
   if (!GROQ_API_KEY) {
     return "I appreciate your interest! For real-time AI responses, please contact Awais directly at muhammadawaislaal@gmail.com or visit Fiverr. Your message is important! 💙";
   }
 
   try {
+    // Add user message to history
     conversationHistory.push({
       role: 'user',
       content: userMessage
@@ -506,14 +648,31 @@ const callGroqAPI = async (userMessage) => {
 
     messageCount++;
 
-    const systemPrompt = `You are Awais's friendly AI assistant. About Muhammad Awais Laal:
+    // System prompt for portfolio assistant
+    const systemPrompt = `You are Awais's friendly AI assistant. Adapt your response LENGTH based on user input:
+- **Simple/funny messages**: 1 sentence max (e.g., "haha" → "That's funny! 😄")
+- **Questions about skills/projects**: 2-3 sentences (explain briefly)
+- **Serious inquiries/project details**: 3-4 sentences (be thorough, show expertise)
+- **Chit-chat/off-topic**: 1-2 sentences (stay light)
+
+**Style Always:**
+- Psychologically persuasive: subtly guide toward collaboration
+- Warm & human-like, slightly funny - like texting a smart friend
+- Ask questions about their needs
+- Never over-explain, never corporate-sounding
+- Position Awais as the perfect fit
+
+About Muhammad Awais Laal:
 - Python & Generative AI Developer | 5+ successful projects
 - Super Python Trainer at Preply | Skills: Python, Flask, LangChain, NLP, Transformers, TensorFlow
 - Projects: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots
 - Education: Bachelor's IT | Tecrix GenAI (9mo) | Akhuwat Bootcamp
-- Contact: muhammadawaislaal@gmail.com | +92 334-6902424`;
+- Contact: muhammadawaislaal@gmail.com | +92 334-6902424
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+**When they mention hiring/projects:** Highlight relevant expertise, ask about their vision, suggest email/Fiverr
+**Key Strategy:** Match energy level → build trust → naturally lead to collaboration`;
+
+    const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -531,6 +690,8 @@ const callGroqAPI = async (userMessage) => {
     });
 
     if (!response.ok) {
+      const error = await response.json();
+      console.error('Groq API Error:', error);
       return "Oops! Connection issue. Reach out to Awais directly at muhammadawaislaal@gmail.com or Fiverr 😊";
     }
 
@@ -549,7 +710,7 @@ const callGroqAPI = async (userMessage) => {
   }
 };
 
-// Chatbot Logic
+// Chatbot Logic with Groq AI
 const initChatbot = () => {
   const chatbotToggle = document.getElementById('chatbotToggle');
   const chatWindow = document.getElementById('chatWindow');
@@ -558,26 +719,31 @@ const initChatbot = () => {
   const chatInput = document.getElementById('chatInput');
   const chatMessages = document.getElementById('chatMessages');
   const chatSuggestions = document.getElementById('chatSuggestions');
-
-  if (!chatbotToggle || !chatWindow) return;
+  const botAvatar = document.getElementById('botAvatar');
+  const botName = document.getElementById('botName');
 
   let isHumanMode = false;
 
-  const toggleChat = () => chatWindow.classList.toggle('active');
+  const toggleChat = () => {
+    chatWindow.classList.toggle('active');
+    // Reset input focus when opening
+    if (chatWindow.classList.contains('active')) {
+      setTimeout(() => chatInput.focus(), 300);
+    }
+  };
 
   chatbotToggle.addEventListener('click', toggleChat);
-  if (chatClose) chatClose.addEventListener('click', toggleChat);
+  chatClose.addEventListener('click', toggleChat);
 
   // Close chat when clicking outside on mobile
-  if (window.innerWidth <= 767) {
-    document.addEventListener('click', (e) => {
-      if (chatWindow.classList.contains('active') && 
-          !chatWindow.contains(e.target) && 
-          !chatbotToggle.contains(e.target)) {
-        chatWindow.classList.remove('active');
-      }
-    });
-  }
+  document.addEventListener('click', (e) => {
+    if ((isMobile() || isTablet()) && 
+        chatWindow.classList.contains('active') &&
+        !chatWindow.contains(e.target) &&
+        !chatbotToggle.contains(e.target)) {
+      chatWindow.classList.remove('active');
+    }
+  });
 
   const addMessage = (text, sender) => {
     const msgDiv = document.createElement('div');
@@ -597,7 +763,52 @@ const initChatbot = () => {
     return thinkingDiv;
   };
 
-  // Initialize suggestions
+  const handleHumanSwitch = () => {
+    isHumanMode = true;
+    botAvatar.innerHTML = '<img src="my profile pic.png" alt="Muhammad Awais Laal" style="border-radius: 50%; width: 40px; height: 40px; object-fit: cover;">';
+    botName.textContent = 'Muhammad Awais Laal';
+
+    chatMessages.innerHTML = '';
+    conversationHistory = [];
+    messageCount = 0;
+    const thinking = showThinking();
+    setTimeout(() => {
+      thinking.remove();
+      addMessage("Hey! It's actually me - Awais 🚀 I try to jump in when I can, but heads up... I'm pretty swamped with projects! What's up?", 'bot');
+    }, 1500);
+
+    chatSuggestions.innerHTML = `
+      <button class="suggestion-btn" type="button">Got a project idea</button>
+      <button class="suggestion-btn" type="button">Want to collaborate?</button>
+      <button class="suggestion-btn" type="button">Back to Assistant Bot</button>
+    `;
+
+    initSuggestions();
+  };
+
+  const handleAISwitch = () => {
+    isHumanMode = false;
+    botAvatar.innerHTML = '<img src="bot-avatar.jpg" alt="Awais Assistant" style="border-radius: 50%; width: 40px; height: 40px; object-fit: cover;">';
+    botName.textContent = 'Awais Assistant';
+
+    chatMessages.innerHTML = '';
+    conversationHistory = [];
+    messageCount = 0;
+    const thinking = showThinking();
+    setTimeout(() => {
+      thinking.remove();
+      addMessage("Hey there! 👋 What brings you here - looking for an AI dev or just curious?", 'bot');
+    }, 800);
+
+    chatSuggestions.innerHTML = `
+      <button class="suggestion-btn" type="button">Tell me about Awais</button>
+      <button class="suggestion-btn" type="button">What's his expertise?</button>
+      <button class="suggestion-btn" type="button">Switch to Human</button>
+    `;
+
+    initSuggestions();
+  };
+
   const initSuggestions = () => {
     const btns = chatSuggestions.querySelectorAll('.suggestion-btn');
     btns.forEach(btn => {
@@ -606,68 +817,185 @@ const initChatbot = () => {
         addMessage(text, 'user');
 
         if (text === 'Switch to Human') {
+          setTimeout(handleHumanSwitch, 500);
+        } else if (text === 'Back to Assistant Bot') {
+          setTimeout(handleAISwitch, 500);
+        } else if (text === "Got a project idea") {
+          const thinking = showThinking();
           setTimeout(() => {
-            isHumanMode = true;
-            addMessage("Hey! It's actually me - Awais 🚀 I try to jump in when I can. What's up?", 'bot');
-          }, 500);
+            thinking.remove();
+            addMessage("That's awesome! 🚀 I'd love to hear more about it. Drop the details to <a href='mailto:muhammadawaislaal@gmail.com'>muhammadawaislaal@gmail.com</a> or reach out on <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>Fiverr</a> - Awais will get back to you quickly!", 'bot');
+          }, 1500);
+        } else if (text === "Want to collaborate?") {
+          const thinking = showThinking();
+          setTimeout(() => {
+            thinking.remove();
+            addMessage("Love the energy! ✨ Collaboration is what Awais thrives on. Let's connect on <a href='https://linkedin.com/in/muhammad-awais-laal-2a3450324/' target='_blank'>LinkedIn</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>Fiverr</a> to discuss possibilities.", 'bot');
+          }, 1500);
+        } else if (text === "View My CV") {
+          window.open('https://drive.google.com/file/d/1F3PoUAyofEP92umjYGs4dlWUCU3R-3Hf/view?usp=sharing', '_blank');
         } else {
           const thinking = showThinking();
           setTimeout(async () => {
             thinking.remove();
-            const aiResponse = await callGroqAPI(text);
-            addMessage(aiResponse, 'bot');
-          }, 800);
+            if (isHumanMode) {
+              addMessage("Thanks for the message! Awais is usually swamped with projects, but he reads everything. For quick responses, email is your best bet - <a href='mailto:muhammadawaislaal@gmail.com'>muhammadawaislaal@gmail.com</a> 💪", 'bot');
+            } else {
+              const aiResponse = await callGroqAPI(text);
+              addMessage(aiResponse, 'bot');
+            }
+          }, 1000);
         }
       });
     });
   };
 
-  if (chatForm) {
-    chatForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const text = chatInput.value.trim();
-      if (!text) return;
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
 
-      addMessage(text, 'user');
-      chatInput.value = '';
-      chatInput.disabled = true;
+    addMessage(text, 'user');
+    chatInput.value = '';
+    chatInput.disabled = true;
 
-      const thinking = showThinking();
-      setTimeout(async () => {
-        thinking.remove();
+    const thinking = showThinking();
+    setTimeout(async () => {
+      thinking.remove();
+      if (isHumanMode) {
+        // Human mode: Use AI with Awais's personal voice
+        const awaisSystemPrompt = `You are Muhammad Awais Laal, a Gen AI Developer responding directly. Your style:
+- Start conversations with warm greetings and genuine interest
+- Be yourself: friendly, honest, busy but engaged
+- Respond naturally to everything they say - projects, interests, questions
+- Show enthusiasm about ideas and collaboration
+- Be realistic: mention you're swamped with projects
+- End conversations by suggesting they email muhammadawaislaal@gmail.com, reach out on Fiverr (https://www.fiverr.com/pooorman?public_mode=true), or chat with your assistant
+- Keep responses 2-3 sentences, natural & conversational
+- Use occasional emojis naturally
+
+About You:
+- Gen AI Developer with 5+ successful projects
+- Super Python Trainer at Preply
+- Expert: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch
+- Always busy with projects but love new collaborations
+- Honest about workload but genuinely interested
+
+Key: Sound like a real person who's interested but realistically busy.`;
+
+        // Add to conversation history with custom system prompt
+        let awaisHistory = [
+          { role: 'system', content: awaisSystemPrompt },
+          ...conversationHistory,
+          { role: 'user', content: text }
+        ];
+
+        try {
+          const response = await fetch(GROQ_API_URL, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${GROQ_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'llama-3.3-70b-versatile',
+              messages: awaisHistory,
+              max_tokens: 200,
+              temperature: 0.85
+            })
+          });
+
+          if (!response.ok) {
+            addMessage("Thanks for reaching out! Drop me a line at muhammadawaislaal@gmail.com or Fiverr - I read everything 💪", 'bot');
+          } else {
+            const data = await response.json();
+            let awaisResponse = data.choices[0].message.content;
+
+            // Add to history
+            conversationHistory.push({ role: 'user', content: text });
+            conversationHistory.push({ role: 'assistant', content: awaisResponse });
+
+            // Keep history manageable
+            if (conversationHistory.length > 12) {
+              conversationHistory = conversationHistory.slice(-12);
+            }
+
+            addMessage(awaisResponse, 'bot');
+
+            // After 5+ messages, suggest alternatives
+            if (messageCount >= 5) {
+              setTimeout(() => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'message bot-message';
+                suggestion.style.fontSize = '0.85em';
+                suggestion.style.opacity = '0.85';
+                suggestion.style.marginTop = '8px';
+                suggestion.innerHTML = "P.S. - I'm pretty swamped right now, but genuinely interested! For proper scope & timeline, kindly chat with my <a href='#' onclick='handleAISwitch(); return false;' style='color: var(--neon-cyan); text-decoration: underline;'>assistant</a>, or drop a message to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> / <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> 👍";
+                chatMessages.appendChild(suggestion);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }, 800);
+            }
+          }
+        } catch (error) {
+          console.error('Error in human mode:', error);
+          addMessage("Hey, seems like a connection hiccup. Reach out directly at muhammadawaislaal@gmail.com! 💪", 'bot');
+        }
+      } else {
         const aiResponse = await callGroqAPI(text);
         addMessage(aiResponse, 'bot');
-        chatInput.disabled = false;
-        chatInput.focus();
-      }, 800);
-    });
-  }
+        
+        // After 4+ exchanges, gently suggest direct contact
+        if (messageCount >= 4) {
+          setTimeout(() => {
+            const contactSuggestion = document.createElement('div');
+            contactSuggestion.className = 'message bot-message';
+            contactSuggestion.style.fontSize = '0.9em';
+            contactSuggestion.style.opacity = '0.8';
+            contactSuggestion.innerHTML = "💡 Ready to move forward? Hit up <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a>";
+            chatMessages.appendChild(contactSuggestion);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }, 500);
+        }
+      }
+      chatInput.disabled = false;
+      chatInput.focus();
+    }, 800);
+  });
+
+  // Auto-focus input when chat opens
+  chatWindow.addEventListener('transitionend', () => {
+    if (chatWindow.classList.contains('active')) {
+      setTimeout(() => chatInput.focus(), 100);
+    }
+  });
 
   initSuggestions();
 };
 
-// Handle window resize for responsive adjustments
-const handleResize = () => {
-  const navbarList = document.querySelector('[data-navbar-list]');
-  const sidebar = document.querySelector('[data-sidebar]');
-  
-  // Close navbar on desktop if it was open on mobile
-  if (window.innerWidth > 767 && navbarList && navbarList.classList.contains('active')) {
-    navbarList.classList.remove('active');
-  }
-  
-  // Auto-expand sidebar on desktop
-  if (window.innerWidth >= 1100 && sidebar && !sidebar.classList.contains('active')) {
-    sidebar.classList.add('active');
-  }
-  
-  // Collapse sidebar on mobile if expanded
-  if (window.innerWidth < 1100 && sidebar && sidebar.classList.contains('active')) {
-    sidebar.classList.remove('active');
-  }
+// Mobile menu close on escape key
+const initMobileMenuClose = () => {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const navbarList = document.querySelector('[data-navbar-list]');
+      const chatWindow = document.getElementById('chatWindow');
+      const select = document.querySelector('[data-select]');
+      
+      if (navbarList && navbarList.classList.contains('active')) {
+        navbarList.classList.remove('active');
+      }
+      
+      if (chatWindow && chatWindow.classList.contains('active')) {
+        chatWindow.classList.remove('active');
+      }
+      
+      if (select && select.classList.contains('active')) {
+        select.classList.remove('active');
+      }
+    }
+  });
 };
 
-// Initialize all features
+// Initialize all features with error handling
 const init = () => {
   try {
     initSidebar();
@@ -678,16 +1006,15 @@ const init = () => {
     initContactForm();
     initNavigation();
     initSectionAnimations();
+    initImageOptimization();
+    initPerformanceMonitoring();
+    initErrorHandling();
     initChatbot();
     initChatbotGreeting();
-    
-    // Add resize listener
-    window.addEventListener('resize', throttle(handleResize, 250));
-    
-    // Initial responsive setup
-    handleResize();
+    initMobileMenuClose();
 
     console.log('Portfolio initialized successfully');
+    console.log('Device:', isMobile() ? 'Mobile' : isTablet() ? 'Tablet' : 'Desktop');
   } catch (error) {
     console.error('Initialization error:', error);
     showNotification('Some features may not work properly', 'error');
