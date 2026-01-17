@@ -44,6 +44,8 @@ const throttle = (func, limit) => {
  */
 const showNotification = (message, type = 'success') => {
   const notification = document.getElementById('notification');
+  if (!notification) return;
+  
   notification.textContent = message;
   notification.className = `notification ${type} active`;
 
@@ -56,14 +58,16 @@ const showNotification = (message, type = 'success') => {
  * Show loading spinner
  */
 const showLoading = () => {
-  document.getElementById('loadingSpinner').classList.add('active');
+  const spinner = document.getElementById('loadingSpinner');
+  if (spinner) spinner.classList.add('active');
 };
 
 /**
  * Hide loading spinner
  */
 const hideLoading = () => {
-  document.getElementById('loadingSpinner').classList.remove('active');
+  const spinner = document.getElementById('loadingSpinner');
+  if (spinner) spinner.classList.remove('active');
 };
 
 // Sidebar toggle
@@ -512,24 +516,6 @@ const initSectionAnimations = () => {
   });
 };
 
-// Preload critical images
-const initImagePreload = () => {
-  const criticalImages = [
-    './assets/images/profile-pic.jpg',
-    './assets/images/yt-summarizer.png',
-    './assets/images/sql-agent.png',
-    './assets/images/business-analyst-chatbot.png',
-    './assets/images/signal-predict.png',
-    './assets/images/churn-modeling.png',
-    './assets/images/genix-ai.png'
-  ];
-
-  criticalImages.forEach(src => {
-    const img = new Image();
-    img.src = src;
-  });
-};
-
 // Performance monitoring
 const initPerformanceMonitoring = () => {
   // Monitor Core Web Vitals
@@ -558,7 +544,6 @@ const initPerformanceMonitoring = () => {
 const initErrorHandling = () => {
   window.addEventListener('error', (e) => {
     console.error('Global error:', e.error);
-    // You can send this to your error tracking service
   });
 
   window.addEventListener('unhandledrejection', (e) => {
@@ -567,13 +552,13 @@ const initErrorHandling = () => {
   });
 };
 
-// Groq AI API Integration - Secure Configuration
+// Groq AI API Integration
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-
-// Load API Key securely from localStorage or env
 let GROQ_API_KEY = null;
+let conversationHistory = [];
+let messageCount = 0;
 
-// Try to load API key from localStorage (set by user or from env.txt locally)
+// Load API Key securely
 const loadAPIKey = async () => {
   // First check localStorage
   if (localStorage.getItem('groq_api_key')) {
@@ -581,7 +566,7 @@ const loadAPIKey = async () => {
     return GROQ_API_KEY;
   }
 
-  // For localhost development, try to load from env.txt
+  // For localhost development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     try {
       const response = await fetch('env.txt');
@@ -594,47 +579,27 @@ const loadAPIKey = async () => {
         }
       }
     } catch (e) {
-      console.log('Could not load env.txt - running in fallback mode');
-    }
-  } else {
-    // For GitHub Pages, try to load from raw GitHub content
-    try {
-      const response = await fetch('https://raw.githubusercontent.com/muhammadawaislaal/My_PortFolio/main/env.txt');
-      if (response.ok) {
-        const text = await response.text();
-        const match = text.match(/GROQ_API_KEY=(.+)/);
-        if (match) {
-          GROQ_API_KEY = match[1].trim();
-          return GROQ_API_KEY;
-        }
-      }
-    } catch (e) {
-      console.log('Could not load API key from GitHub');
+      console.log('Could not load env.txt');
     }
   }
-
+  
   return null;
 };
 
 // Initialize API key on page load
 loadAPIKey().then(key => {
   if (!key) {
-    console.warn('Groq API Key not found. AI features will be limited. For full functionality, add your API key to localStorage: localStorage.setItem("groq_api_key", "your_key_here")');
+    console.warn('Groq API Key not found. AI features will be limited.');
   }
 });
 
-let conversationHistory = [];
-let messageCount = 0;
-
 // Function to call Groq API
 const callGroqAPI = async (userMessage) => {
-  // Check if API key is available
   if (!GROQ_API_KEY) {
     return "I appreciate your interest! For real-time AI responses, please contact Awais directly at muhammadawaislaal@gmail.com or visit Fiverr. Your message is important! 💙";
   }
 
   try {
-    // Add user message to history
     conversationHistory.push({
       role: 'user',
       content: userMessage
@@ -642,29 +607,23 @@ const callGroqAPI = async (userMessage) => {
 
     messageCount++;
 
-    // System prompt for portfolio assistant
     const systemPrompt = `You are Awais's friendly AI assistant. Adapt your response LENGTH based on user input:
-- **Simple/funny messages**: 1 sentence max (e.g., "haha" → "That's funny! 😄")
-- **Questions about skills/projects**: 2-3 sentences (explain briefly)
-- **Serious inquiries/project details**: 3-4 sentences (be thorough, show expertise)
-- **Chit-chat/off-topic**: 1-2 sentences (stay light)
+- **Simple/funny messages**: 1 sentence max
+- **Questions about skills/projects**: 2-3 sentences
+- **Serious inquiries/project details**: 3-4 sentences
+- **Chit-chat/off-topic**: 1-2 sentences
 
 **Style Always:**
 - Psychologically persuasive: subtly guide toward collaboration
-- Warm & human-like, slightly funny - like texting a smart friend
+- Warm & human-like, slightly funny
 - Ask questions about their needs
-- Never over-explain, never corporate-sounding
 - Position Awais as the perfect fit
 
 About Muhammad Awais Laal:
 - Python & Generative AI Developer | 5+ successful projects
 - Super Python Trainer at Preply | Skills: Python, Flask, LangChain, NLP, Transformers, TensorFlow
 - Projects: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots
-- Education: Bachelor's IT | Tecrix GenAI (9mo) | Akhuwat Bootcamp
-- Contact: muhammadawaislaal@gmail.com | +92 334-6902424
-
-**When they mention hiring/projects:** Highlight relevant expertise, ask about their vision, suggest email/Fiverr
-**Key Strategy:** Match energy level → build trust → naturally lead to collaboration`;
+- Contact: muhammadawaislaal@gmail.com | +92 334-6902424`;
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -782,7 +741,6 @@ const initChatbot = () => {
         <button class="suggestion-btn">Want to collaborate?</button>
         <button class="suggestion-btn">Back to Assistant Bot</button>
       `;
-
       initSuggestions();
     }
   };
@@ -811,7 +769,6 @@ const initChatbot = () => {
         <button class="suggestion-btn">What's his expertise?</button>
         <button class="suggestion-btn">Switch to Human</button>
       `;
-
       initSuggestions();
     }
   };
@@ -841,8 +798,6 @@ const initChatbot = () => {
             thinking.remove();
             addMessage("Love the energy! ✨ Collaboration is what Awais thrives on. Let's connect on <a href='https://linkedin.com/in/muhammad-awais-laal-2a3450324/' target='_blank'>LinkedIn</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>Fiverr</a> to discuss possibilities.", 'bot');
           }, 1500);
-        } else if (text === "View My CV") {
-          window.open('https://drive.google.com/file/d/1F3PoUAyofEP92umjYGs4dlWUCU3R-3Hf/view?usp=sharing', '_blank');
         } else {
           const thinking = showThinking();
           setTimeout(async () => {
@@ -872,7 +827,6 @@ const initChatbot = () => {
     setTimeout(async () => {
       thinking.remove();
       if (isHumanMode) {
-        // Human mode: Use AI with Awais's personal voice
         const awaisSystemPrompt = `You are Muhammad Awais Laal, a Gen AI Developer responding directly. Your style:
 - Start conversations with warm greetings and genuine interest
 - Be yourself: friendly, honest, busy but engaged
@@ -881,18 +835,8 @@ const initChatbot = () => {
 - Be realistic: mention you're swamped with projects
 - End conversations by suggesting they email muhammadawaislaal@gmail.com, reach out on Fiverr (https://www.fiverr.com/pooorman?public_mode=true), or chat with your assistant
 - Keep responses 2-3 sentences, natural & conversational
-- Use occasional emojis naturally
+- Use occasional emojis naturally`;
 
-About You:
-- Gen AI Developer with 5+ successful projects
-- Super Python Trainer at Preply
-- Expert: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch
-- Always busy with projects but love new collaborations
-- Honest about workload but genuinely interested
-
-Key: Sound like a real person who's interested but realistically busy.`;
-
-        // Add to conversation history with custom system prompt
         let awaisHistory = [
           { role: 'system', content: awaisSystemPrompt },
           ...conversationHistory,
@@ -920,18 +864,15 @@ Key: Sound like a real person who's interested but realistically busy.`;
             const data = await response.json();
             let awaisResponse = data.choices[0].message.content;
 
-            // Add to history
             conversationHistory.push({ role: 'user', content: text });
             conversationHistory.push({ role: 'assistant', content: awaisResponse });
 
-            // Keep history manageable
             if (conversationHistory.length > 12) {
               conversationHistory = conversationHistory.slice(-12);
             }
 
             addMessage(awaisResponse, 'bot');
 
-            // After 5+ messages, suggest alternatives
             if (messageCount >= 5) {
               setTimeout(() => {
                 const suggestion = document.createElement('div');
@@ -953,7 +894,6 @@ Key: Sound like a real person who's interested but realistically busy.`;
         const aiResponse = await callGroqAPI(text);
         addMessage(aiResponse, 'bot');
         
-        // After 4+ exchanges, gently suggest direct contact
         if (messageCount >= 4) {
           setTimeout(() => {
             const contactSuggestion = document.createElement('div');
@@ -1003,7 +943,6 @@ const init = () => {
     initContactForm();
     initNavigation();
     initSectionAnimations();
-    initImagePreload();
     initPerformanceMonitoring();
     initErrorHandling();
     initChatbot();
