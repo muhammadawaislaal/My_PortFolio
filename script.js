@@ -71,7 +71,24 @@ const initSidebar = () => {
   const sidebar = document.querySelector('[data-sidebar]');
   const sidebarBtn = document.querySelector('[data-sidebar-btn]');
 
-  const toggleSidebar = () => toggleElement(sidebar);
+  if (!sidebar || !sidebarBtn) return;
+
+  const toggleSidebar = () => {
+    toggleElement(sidebar);
+    // Close sidebar when clicking outside on mobile
+    if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+      document.addEventListener('click', handleOutsideClick, true);
+    } else {
+      document.removeEventListener('click', handleOutsideClick, true);
+    }
+  };
+
+  const handleOutsideClick = (e) => {
+    if (!sidebar.contains(e.target) && !sidebarBtn.contains(e.target)) {
+      sidebar.classList.remove('active');
+      document.removeEventListener('click', handleOutsideClick, true);
+    }
+  };
 
   sidebarBtn.addEventListener('click', toggleSidebar);
   sidebarBtn.addEventListener('keydown', (e) => {
@@ -87,7 +104,24 @@ const initNavbar = () => {
   const navbarToggle = document.querySelector('[data-navbar-toggle]');
   const navbarList = document.querySelector('[data-navbar-list]');
 
-  const toggleNavbar = () => toggleElement(navbarList);
+  if (!navbarToggle || !navbarList) return;
+
+  const toggleNavbar = () => {
+    toggleElement(navbarList);
+    // Close navbar when clicking outside
+    if (navbarList.classList.contains('active')) {
+      document.addEventListener('click', handleNavbarOutsideClick, true);
+    } else {
+      document.removeEventListener('click', handleNavbarOutsideClick, true);
+    }
+  };
+
+  const handleNavbarOutsideClick = (e) => {
+    if (!navbarToggle.contains(e.target) && !navbarList.contains(e.target)) {
+      navbarList.classList.remove('active');
+      document.removeEventListener('click', handleNavbarOutsideClick, true);
+    }
+  };
 
   navbarToggle.addEventListener('click', toggleNavbar);
   navbarToggle.addEventListener('keydown', (e) => {
@@ -97,11 +131,15 @@ const initNavbar = () => {
     }
   });
 
-  // Close navbar when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!navbarToggle.contains(e.target) && !navbarList.contains(e.target)) {
-      navbarList.classList.remove('active');
-    }
+  // Close navbar when clicking on a link
+  const navbarLinks = navbarList.querySelectorAll('.navbar-link');
+  navbarLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        navbarList.classList.remove('active');
+        document.removeEventListener('click', handleNavbarOutsideClick, true);
+      }
+    });
   });
 };
 
@@ -109,7 +147,9 @@ const initNavbar = () => {
 const initThemeToggle = () => {
   const themeToggle = document.querySelector('.theme-toggle');
   const body = document.body;
-  const icon = themeToggle.querySelector('ion-icon');
+  const icon = themeToggle?.querySelector('ion-icon');
+
+  if (!themeToggle || !icon) return;
 
   // Check for saved theme preference or default to light
   const savedTheme = localStorage.getItem('theme') || 'light-theme';
@@ -166,6 +206,13 @@ const initFiverrMessages = () => {
   fiverrBtn.addEventListener('mouseleave', hideMessage);
   fiverrBtn.addEventListener('focus', showMessage);
   fiverrBtn.addEventListener('blur', hideMessage);
+  
+  // Touch support for mobile
+  fiverrBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    showMessage();
+    setTimeout(hideMessage, 3000);
+  });
 };
 
 // Portfolio filtering
@@ -174,6 +221,9 @@ const initPortfolioFilter = () => {
   const selectItems = document.querySelectorAll('[data-select-item]');
   const selectValue = document.querySelector('[data-select-value]');
   const filterButtons = document.querySelectorAll('[data-filter-btn]');
+  
+  if (!select || !selectValue || filterButtons.length === 0) return;
+  
   let lastClickedBtn = filterButtons[0];
 
   const filterFunc = (selectedValue) => {
@@ -218,13 +268,15 @@ const initPortfolioFilter = () => {
     }
   };
 
-  select.addEventListener('click', () => toggleElement(select));
-  select.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      toggleElement(select);
-    }
-  });
+  if (select) {
+    select.addEventListener('click', () => toggleElement(select));
+    select.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleElement(select);
+      }
+    });
+  }
 
   selectItems.forEach(item => {
     item.addEventListener('click', () => {
@@ -258,7 +310,7 @@ const initPortfolioFilter = () => {
 
   // Close select when clicking outside
   document.addEventListener('click', (e) => {
-    if (!select.contains(e.target)) {
+    if (select && !select.contains(e.target)) {
       select.classList.remove('active');
     }
   });
@@ -271,7 +323,9 @@ const initContactForm = () => {
   const form = document.querySelector('[data-form]');
   const formInputs = document.querySelectorAll('[data-form-input]');
   const formBtn = document.querySelector('[data-form-btn]');
-  const formBtnText = formBtn.querySelector('span');
+  const formBtnText = formBtn?.querySelector('span');
+
+  if (!form || !formBtn || !formBtnText) return;
 
   const validateForm = () => {
     let isValid = true;
@@ -348,6 +402,8 @@ const initNavigation = () => {
   const pages = document.querySelectorAll('[data-page]');
   const navbarList = document.querySelector('[data-navbar-list]');
 
+  if (navigationLinks.length === 0 || pages.length === 0) return;
+
   const navigateToPage = (targetPage) => {
     // Update page visibility
     pages.forEach(page => {
@@ -363,7 +419,7 @@ const initNavigation = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Close mobile navbar if open
-    if (navbarList.classList.contains('active')) {
+    if (navbarList && navbarList.classList.contains('active')) {
       toggleElement(navbarList);
     }
 
@@ -660,12 +716,29 @@ const initChatbot = () => {
   const botAvatar = document.getElementById('botAvatar');
   const botName = document.getElementById('botName');
 
+  if (!chatbotToggle || !chatWindow || !chatForm) return;
+
   let isHumanMode = false;
 
-  const toggleChat = () => chatWindow.classList.toggle('active');
+  const toggleChat = () => {
+    chatWindow.classList.toggle('active');
+    // Close chat when clicking outside on mobile
+    if (window.innerWidth <= 768 && chatWindow.classList.contains('active')) {
+      document.addEventListener('click', handleChatOutsideClick, true);
+    } else {
+      document.removeEventListener('click', handleChatOutsideClick, true);
+    }
+  };
+
+  const handleChatOutsideClick = (e) => {
+    if (!chatWindow.contains(e.target) && !chatbotToggle.contains(e.target)) {
+      chatWindow.classList.remove('active');
+      document.removeEventListener('click', handleChatOutsideClick, true);
+    }
+  };
 
   chatbotToggle.addEventListener('click', toggleChat);
-  chatClose.addEventListener('click', toggleChat);
+  if (chatClose) chatClose.addEventListener('click', toggleChat);
 
   const addMessage = (text, sender) => {
     const msgDiv = document.createElement('div');
@@ -687,8 +760,12 @@ const initChatbot = () => {
 
   const handleHumanSwitch = () => {
     isHumanMode = true;
-    botAvatar.innerHTML = '<img src="my profile pic.png" alt="Muhammad Awais Laal" style="border-radius: 50%;">';
-    botName.textContent = 'Muhammad Awais Laal';
+    if (botAvatar) {
+      botAvatar.innerHTML = '<img src="my profile pic.png" alt="Muhammad Awais Laal" style="border-radius: 50%;">';
+    }
+    if (botName) {
+      botName.textContent = 'Muhammad Awais Laal';
+    }
 
     chatMessages.innerHTML = '';
     conversationHistory = [];
@@ -699,19 +776,25 @@ const initChatbot = () => {
       addMessage("Hey! It's actually me - Awais 🚀 I try to jump in when I can, but heads up... I'm pretty swamped with projects! What's up?", 'bot');
     }, 1500);
 
-    chatSuggestions.innerHTML = `
-      <button class="suggestion-btn">Got a project idea</button>
-      <button class="suggestion-btn">Want to collaborate?</button>
-      <button class="suggestion-btn">Back to Assistant Bot</button>
-    `;
+    if (chatSuggestions) {
+      chatSuggestions.innerHTML = `
+        <button class="suggestion-btn">Got a project idea</button>
+        <button class="suggestion-btn">Want to collaborate?</button>
+        <button class="suggestion-btn">Back to Assistant Bot</button>
+      `;
 
-    initSuggestions();
+      initSuggestions();
+    }
   };
 
   const handleAISwitch = () => {
     isHumanMode = false;
-    botAvatar.innerHTML = '<img src="bot-avatar.jpg" alt="Awais Assistant" style="border-radius: 50%;">';
-    botName.textContent = 'Awais Assistant';
+    if (botAvatar) {
+      botAvatar.innerHTML = '<img src="bot-avatar.jpg" alt="Awais Assistant" style="border-radius: 50%;">';
+    }
+    if (botName) {
+      botName.textContent = 'Awais Assistant';
+    }
 
     chatMessages.innerHTML = '';
     conversationHistory = [];
@@ -722,17 +805,21 @@ const initChatbot = () => {
       addMessage("Hey there! 👋 What brings you here - looking for an AI dev or just curious?", 'bot');
     }, 800);
 
-    chatSuggestions.innerHTML = `
-      <button class="suggestion-btn">Tell me about Awais</button>
-      <button class="suggestion-btn">What's his expertise?</button>
-      <button class="suggestion-btn">Switch to Human</button>
-    `;
+    if (chatSuggestions) {
+      chatSuggestions.innerHTML = `
+        <button class="suggestion-btn">Tell me about Awais</button>
+        <button class="suggestion-btn">What's his expertise?</button>
+        <button class="suggestion-btn">Switch to Human</button>
+      `;
 
-    initSuggestions();
+      initSuggestions();
+    }
   };
 
   const initSuggestions = () => {
-    const btns = chatSuggestions.querySelectorAll('.suggestion-btn');
+    const btns = chatSuggestions?.querySelectorAll('.suggestion-btn');
+    if (!btns) return;
+
     btns.forEach(btn => {
       btn.addEventListener('click', async () => {
         const text = btn.textContent;
@@ -887,6 +974,24 @@ Key: Sound like a real person who's interested but realistically busy.`;
   initSuggestions();
 };
 
+// Handle viewport resize
+const handleResize = () => {
+  // Close mobile navbar when switching to desktop
+  if (window.innerWidth > 768) {
+    const navbarList = document.querySelector('[data-navbar-list]');
+    const sidebar = document.querySelector('[data-sidebar]');
+    
+    if (navbarList && navbarList.classList.contains('active')) {
+      navbarList.classList.remove('active');
+    }
+    
+    // Reset sidebar for desktop
+    if (sidebar && window.innerWidth >= 1025) {
+      sidebar.classList.remove('active');
+    }
+  }
+};
+
 // Initialize all features with error handling
 const init = () => {
   try {
@@ -903,6 +1008,9 @@ const init = () => {
     initErrorHandling();
     initChatbot();
     initChatbotGreeting();
+
+    // Add resize listener
+    window.addEventListener('resize', debounce(handleResize, 250));
 
     console.log('Portfolio initialized successfully');
   } catch (error) {
