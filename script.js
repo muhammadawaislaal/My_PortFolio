@@ -559,31 +559,33 @@ let conversationHistory = [];
 let messageCount = 0;
 let isHumanMode = false;
 
-// Load API Key securely from env.txt
+// Load API Key from env.txt
 const loadAPIKey = async () => {
   try {
-    // Try to fetch from env.txt file
+    // Try to load from env.txt
     const response = await fetch('env.txt');
     if (response.ok) {
       const text = await response.text();
-      const match = text.match(/GROQ_API_KEY\s*=\s*(.+)/);
-      if (match && match[1]) {
-        GROQ_API_KEY = match[1].trim();
-        console.log('API Key loaded successfully from env.txt');
-        return GROQ_API_KEY;
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('GROQ_API_KEY=')) {
+          GROQ_API_KEY = line.split('=')[1].trim();
+          console.log('API Key loaded from env.txt');
+          return GROQ_API_KEY;
+        }
       }
     }
   } catch (error) {
-    console.log('Could not load env.txt file or API key not found');
+    console.log('Could not load env.txt:', error);
   }
-  
-  // Fallback to localStorage for development
+
+  // Fallback to localStorage
   if (localStorage.getItem('groq_api_key')) {
     GROQ_API_KEY = localStorage.getItem('groq_api_key');
     console.log('API Key loaded from localStorage');
     return GROQ_API_KEY;
   }
-  
+
   console.warn('No Groq API Key found. Chatbot will use fallback responses.');
   return null;
 };
@@ -591,14 +593,11 @@ const loadAPIKey = async () => {
 // Function to call Groq API
 const callGroqAPI = async (userMessage) => {
   if (!GROQ_API_KEY) {
-    // Try to load API key if not loaded
-    await loadAPIKey();
-    if (!GROQ_API_KEY) {
-      return "I appreciate your interest! For real-time AI responses, please contact Awais directly at muhammadawaislaal@gmail.com or visit his Fiverr profile. He'll be happy to help you with your AI projects! 💙";
-    }
+    return "I appreciate your interest! For real-time AI responses, please contact Awais directly at muhammadawaislaal@gmail.com or visit his Fiverr profile. Your message is important! 💙";
   }
 
   try {
+    // Add user message to history
     conversationHistory.push({
       role: 'user',
       content: userMessage
@@ -606,28 +605,27 @@ const callGroqAPI = async (userMessage) => {
 
     messageCount++;
 
-    const systemPrompt = `You are Awais Assistant, the AI assistant for Muhammad Awais Laal, a talented Gen AI Developer from Pakistan.
-
+    const systemPrompt = `You are Awais Assistant, the AI assistant for Muhammad Awais Laal, a skilled Gen AI Developer.
+    
 About Awais:
-- Full Name: Muhammad Awais Laal
+- Name: Muhammad Awais Laal
 - Title: Gen AI Developer & Super Python Trainer at Preply
 - Location: Punjab, Pakistan
 - Experience: 1+ years in AI/ML
-- Expertise: Python, Flask, TensorFlow, PyTorch, LangChain, OpenAI API, Hugging Face, NLP, Transformers
-- Projects: YouTube Video Summarizer, AI SQL Agent, Business Analyst Chatbot, Trading Signal Predictor, Course Management System
+- Expertise: Python, Flask, TensorFlow, PyTorch, LangChain, OpenAI API, Hugging Face
+- Projects: YouTube Video Summarizer, AI SQL Agent, Business Analyst Chatbot, Trading Signal Predictor
 - Contact: muhammadawaislaal@gmail.com | Phone: +92 3346902424
-- Platforms: Fiverr, Upwork, GitHub, LinkedIn
-- Clients: Tecrix, Akhuwat, and various international clients
+- Portfolio: https://muhammadawaislaal.github.io
 
 Your personality:
 - Be friendly, helpful, and professional
-- Keep responses concise but informative (1-3 sentences)
+- Keep responses concise (2-4 sentences)
 - Show enthusiasm for AI/ML topics
 - Guide users to contact Awais for serious inquiries
-- Be knowledgeable but humble
 - Use occasional emojis to keep it friendly 😊
+- If you don't know something, be honest and suggest contacting Awais
 
-Important: Always be honest about what you can and cannot do. If someone asks for something beyond your capabilities, suggest they contact Awais directly for personalized assistance.`;
+Important: Always be helpful and encourage users to reach out to Awais for project collaborations or AI development needs.`;
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -639,34 +637,29 @@ Important: Always be honest about what you can and cannot do. If someone asks fo
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...conversationHistory.slice(-8) // Keep last 8 messages for context
+          ...conversationHistory.slice(-6) // Keep last 6 messages for context
         ],
-        max_tokens: 250,
-        temperature: 0.7,
-        top_p: 0.9,
-        frequency_penalty: 0.2,
-        presence_penalty: 0.1
+        max_tokens: 300,
+        temperature: 0.7
       })
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Groq API Error:', error);
-      throw new Error('API request failed');
+      throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
     let assistantMessage = data.choices[0].message.content;
 
-    // Add to conversation history
+    // Add assistant response to history
     conversationHistory.push({
       role: 'assistant',
       content: assistantMessage
     });
 
-    // Keep conversation history manageable (last 12 messages)
-    if (conversationHistory.length > 12) {
-      conversationHistory = conversationHistory.slice(-12);
+    // Keep conversation history manageable
+    if (conversationHistory.length > 10) {
+      conversationHistory = conversationHistory.slice(-10);
     }
 
     return assistantMessage;
@@ -677,44 +670,42 @@ Important: Always be honest about what you can and cannot do. If someone asks fo
 };
 
 // Add message to chat
-const addMessage = (text, sender, chatMessages) => {
+const addMessage = (text, sender) => {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return null;
+
   const msgDiv = document.createElement('div');
   msgDiv.className = `message ${sender}-message`;
   
-  // Sanitize and format links
+  // Format text with clickable links
   const formattedText = text
     .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
     .replace(/(muhammadawaislaal@gmail\.com)/g, '<a href="mailto:$1">$1</a>')
-    .replace(/(github\.com\/muhammadawaislaal)/g, '<a href="https://$1" target="_blank" rel="noopener">$1</a>')
-    .replace(/(linkedin\.com\/in\/[^\s]+)/g, '<a href="https://$1" target="_blank" rel="noopener">LinkedIn</a>')
-    .replace(/(fiverr\.com\/[^\s]+)/g, '<a href="https://www.$1" target="_blank" rel="noopener">Fiverr</a>');
+    .replace(/(github\.com\/muhammadawaislaal)/g, '<a href="https://$1" target="_blank" rel="noopener">GitHub</a>')
+    .replace(/(linkedin\.com\/in\/muhammad-awais-2a3450324\/)/g, '<a href="https://$1" target="_blank" rel="noopener">LinkedIn</a>')
+    .replace(/(fiverr\.com\/sellers\/pooorman)/g, '<a href="https://www.$1" target="_blank" rel="noopener">Fiverr</a>');
   
   msgDiv.innerHTML = formattedText;
   chatMessages.appendChild(msgDiv);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
   
-  // Add typing indicator for bot messages
-  if (sender === 'bot') {
-    msgDiv.style.opacity = '0';
-    msgDiv.style.transform = 'translateY(10px)';
-    setTimeout(() => {
-      msgDiv.style.transition = 'opacity 0.3s, transform 0.3s';
-      msgDiv.style.opacity = '1';
-      msgDiv.style.transform = 'translateY(0)';
-    }, 50);
-  }
+  // Scroll to bottom
+  chatMessages.scrollTop = chatMessages.scrollHeight;
   
   return msgDiv;
 };
 
-// Show thinking indicator
-const showThinking = (chatMessages) => {
-  const thinkingDiv = document.createElement('div');
-  thinkingDiv.className = 'message bot-message thinking';
-  thinkingDiv.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-  chatMessages.appendChild(thinkingDiv);
+// Show typing indicator
+const showTypingIndicator = () => {
+  const chatMessages = document.getElementById('chatMessages');
+  if (!chatMessages) return null;
+
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'message bot-message typing-indicator';
+  typingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  chatMessages.appendChild(typingDiv);
   chatMessages.scrollTop = chatMessages.scrollHeight;
-  return thinkingDiv;
+  
+  return typingDiv;
 };
 
 // Chatbot Logic with Groq AI
@@ -724,13 +715,11 @@ const initChatbot = () => {
   const chatClose = document.getElementById('chatClose');
   const chatForm = document.getElementById('chatForm');
   const chatInput = document.getElementById('chatInput');
-  const chatMessages = document.getElementById('chatMessages');
   const chatSuggestions = document.getElementById('chatSuggestions');
   const botAvatar = document.getElementById('botAvatar');
   const botName = document.getElementById('botName');
-  const botStatus = document.querySelector('.bot-status');
 
-  if (!chatbotToggle || !chatWindow || !chatForm || !chatMessages) {
+  if (!chatbotToggle || !chatWindow || !chatForm) {
     console.error('Chatbot elements not found');
     return;
   }
@@ -738,40 +727,32 @@ const initChatbot = () => {
   // Load API key on initialization
   loadAPIKey().then(key => {
     if (key) {
-      console.log('Chatbot ready with API key');
-      if (botStatus) {
-        botStatus.textContent = 'Online';
-        botStatus.style.color = '#4CAF50';
-      }
+      console.log('AI Chatbot initialized with API key');
     } else {
-      console.log('Chatbot running in fallback mode');
-      if (botStatus) {
-        botStatus.textContent = 'Limited Mode';
-        botStatus.style.color = '#FF9800';
-      }
+      console.log('AI Chatbot running in fallback mode');
     }
   });
 
+  // Toggle chat window
   const toggleChat = () => {
     chatWindow.classList.toggle('active');
     if (chatWindow.classList.contains('active')) {
       chatInput.focus();
-      
-      // Close chat when clicking outside on mobile
+      // Close when clicking outside on mobile
       if (window.innerWidth <= 768) {
         setTimeout(() => {
-          document.addEventListener('click', handleChatOutsideClick, true);
+          document.addEventListener('click', handleOutsideClick, true);
         }, 100);
       }
     } else {
-      document.removeEventListener('click', handleChatOutsideClick, true);
+      document.removeEventListener('click', handleOutsideClick, true);
     }
   };
 
-  const handleChatOutsideClick = (e) => {
+  const handleOutsideClick = (e) => {
     if (!chatWindow.contains(e.target) && !chatbotToggle.contains(e.target)) {
       chatWindow.classList.remove('active');
-      document.removeEventListener('click', handleChatOutsideClick, true);
+      document.removeEventListener('click', handleOutsideClick, true);
     }
   };
 
@@ -781,7 +762,7 @@ const initChatbot = () => {
     chatClose.addEventListener('click', (e) => {
       e.stopPropagation();
       chatWindow.classList.remove('active');
-      document.removeEventListener('click', handleChatOutsideClick, true);
+      document.removeEventListener('click', handleOutsideClick, true);
     });
   }
 
@@ -795,13 +776,13 @@ const initChatbot = () => {
         const text = btn.textContent;
         
         // Add user message
-        addMessage(text, 'user', chatMessages);
+        addMessage(text, 'user');
         
-        // Remove suggestion buttons temporarily
+        // Clear suggestions temporarily
         chatSuggestions.innerHTML = '';
         
-        // Show thinking indicator
-        const thinking = showThinking(chatMessages);
+        // Show typing indicator
+        const typing = showTypingIndicator();
         
         try {
           let response;
@@ -814,7 +795,7 @@ const initChatbot = () => {
             if (botName) {
               botName.textContent = 'Muhammad Awais Laal';
             }
-            response = "Hey there! 👋 It's Awais here. I try to check in when I can, but I'm often busy with projects. For quick responses, email me at muhammadawaislaal@gmail.com or message me on Fiverr!";
+            response = "Hey! It's Awais here 👋 I try to check in when I can. For project discussions or quick responses, email me at muhammadawaislaal@gmail.com or message on Fiverr!";
           } else if (text === 'Back to Assistant Bot') {
             isHumanMode = false;
             if (botAvatar) {
@@ -823,16 +804,18 @@ const initChatbot = () => {
             if (botName) {
               botName.textContent = 'Awais Assistant';
             }
-            response = "Hey! I'm back - Awais's AI assistant! How can I help you learn more about his work? 🤖";
+            response = "Hi! I'm back - Awais's AI assistant! How can I help you learn about his work? 🤖";
           } else {
             // Use AI for other suggestions
             response = await callGroqAPI(text);
           }
           
-          // Remove thinking indicator and add response
+          // Remove typing indicator and add response
           setTimeout(() => {
-            thinking.remove();
-            addMessage(response, 'bot', chatMessages);
+            if (typing && typing.parentNode) {
+              typing.remove();
+            }
+            addMessage(response, 'bot');
             
             // Restore suggestions
             setTimeout(() => {
@@ -855,8 +838,10 @@ const initChatbot = () => {
           
         } catch (error) {
           console.error('Error handling suggestion:', error);
-          thinking.remove();
-          addMessage("Oops! Something went wrong. Please try again or contact Awais directly.", 'bot', chatMessages);
+          if (typing && typing.parentNode) {
+            typing.remove();
+          }
+          addMessage("Oops! Something went wrong. Please try again or contact Awais directly.", 'bot');
         }
       });
     });
@@ -869,58 +854,58 @@ const initChatbot = () => {
     if (!text) return;
 
     // Add user message
-    addMessage(text, 'user', chatMessages);
+    addMessage(text, 'user');
     chatInput.value = '';
     chatInput.disabled = true;
 
-    // Show thinking indicator
-    const thinking = showThinking(chatMessages);
+    // Show typing indicator
+    const typing = showTypingIndicator();
 
     try {
       let response;
       
       if (isHumanMode) {
         // Human mode response
-        response = "Thanks for your message! I'm usually busy with projects, but I check emails regularly. For a proper discussion about your project, please email me at muhammadawaislaal@gmail.com or contact me on Fiverr. Looking forward to hearing from you! 🚀";
+        response = "Thanks for reaching out! I'm usually busy with projects, but I check emails regularly. For detailed discussions, please email me at muhammadawaislaal@gmail.com or message me on Fiverr. Looking forward to hearing from you! 🚀";
       } else {
         // AI mode response
         response = await callGroqAPI(text);
       }
 
-      // Remove thinking indicator and add response
+      // Remove typing indicator and add response
       setTimeout(() => {
-        thinking.remove();
-        addMessage(response, 'bot', chatMessages);
+        if (typing && typing.parentNode) {
+          typing.remove();
+        }
+        addMessage(response, 'bot');
 
-        // Update suggestions based on message count
+        // Add contact suggestion after a few messages
         messageCount++;
         if (messageCount >= 3 && !isHumanMode) {
           setTimeout(() => {
-            const contactSuggestion = document.createElement('div');
-            contactSuggestion.className = 'message bot-message';
-            contactSuggestion.style.fontSize = '0.85em';
-            contactSuggestion.style.opacity = '0.8';
-            contactSuggestion.style.marginTop = '10px';
-            contactSuggestion.innerHTML = "💡 <strong>Ready to work together?</strong> Contact Awais directly at <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan);'>muhammadawaislaal@gmail.com</a> or on <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan);'>Fiverr</a> for personalized assistance!";
-            chatMessages.appendChild(contactSuggestion);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            const contactMsg = document.createElement('div');
+            contactMsg.className = 'message bot-message';
+            contactMsg.style.fontSize = '0.85em';
+            contactMsg.style.opacity = '0.8';
+            contactMsg.innerHTML = "💡 <strong>Ready to collaborate?</strong> Contact Awais at <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a>!";
+            document.getElementById('chatMessages').appendChild(contactMsg);
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
           }, 300);
         }
       }, 800);
     } catch (error) {
       console.error('Error processing message:', error);
-      thinking.remove();
-      addMessage("I apologize, but I'm having trouble processing your request right now. Please try again or contact Awais directly at muhammadawaislaal@gmail.com", 'bot', chatMessages);
+      if (typing && typing.parentNode) {
+        typing.remove();
+      }
+      addMessage("I apologize, but I'm having trouble right now. Please contact Awais directly at muhammadawaislaal@gmail.com", 'bot');
     } finally {
       chatInput.disabled = false;
       chatInput.focus();
     }
   });
 
-  // Initialize suggestions
-  initSuggestions();
-
-  // Handle Enter key for sending (but allow Shift+Enter for new line)
+  // Handle Enter key (but allow Shift+Enter for new line)
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -928,12 +913,14 @@ const initChatbot = () => {
     }
   });
 
-  // Add welcome message if chat is empty
-  if (chatMessages.children.length === 1) { // Only has the initial message
-    setTimeout(() => {
-      addMessage("I'm Awais Assistant, here to help you learn about Muhammad Awais Laal's AI expertise and projects. Feel free to ask me anything! 😊", 'bot', chatMessages);
-    }, 1000);
-  }
+  // Initialize suggestions
+  initSuggestions();
+
+  // Add welcome message
+  setTimeout(() => {
+    const welcomeMsg = "Hi! I'm Awais Assistant 🤖 I can tell you about Muhammad Awais Laal's AI expertise, projects, and skills. How can I help you today?";
+    addMessage(welcomeMsg, 'bot');
+  }, 1000);
 };
 
 // Handle viewport resize
@@ -954,7 +941,7 @@ const handleResize = () => {
   }
 };
 
-// Initialize all features with error handling
+// Initialize all features
 const init = () => {
   try {
     console.log('Initializing portfolio...');
@@ -975,13 +962,6 @@ const init = () => {
     // Add resize listener
     window.addEventListener('resize', debounce(handleResize, 250));
 
-    // Initialize API key
-    loadAPIKey().then(() => {
-      console.log('API key initialization complete');
-    }).catch(err => {
-      console.error('API key loading failed:', err);
-    });
-
     console.log('Portfolio initialized successfully');
   } catch (error) {
     console.error('Initialization error:', error);
@@ -989,19 +969,9 @@ const init = () => {
   }
 };
 
-// Enhanced DOM ready with loading states
+// Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
-}
-
-// Export for potential module usage
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    toggleElement,
-    debounce,
-    throttle,
-    showNotification
-  };
 }
