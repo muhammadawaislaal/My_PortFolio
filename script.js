@@ -1,3 +1,4 @@
+// Mobile responsiveness: Added touch event handling and improved mobile navigation
 'use strict';
 
 /**
@@ -80,6 +81,15 @@ const initSidebar = () => {
       toggleSidebar();
     }
   });
+  
+  // Close sidebar when clicking outside on mobile
+  if (window.innerWidth <= 768) {
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && !sidebarBtn.contains(e.target) && sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+      }
+    });
+  }
 };
 
 // Navbar toggle for mobile
@@ -89,20 +99,38 @@ const initNavbar = () => {
 
   const toggleNavbar = () => toggleElement(navbarList);
 
-  navbarToggle.addEventListener('click', toggleNavbar);
-  navbarToggle.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+  if (navbarToggle) {
+    navbarToggle.addEventListener('click', toggleNavbar);
+    navbarToggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleNavbar();
+      }
+    });
+    
+    // Touch support for mobile
+    navbarToggle.addEventListener('touchend', (e) => {
       e.preventDefault();
       toggleNavbar();
-    }
-  });
+    });
+  }
 
   // Close navbar when clicking outside
   document.addEventListener('click', (e) => {
-    if (!navbarToggle.contains(e.target) && !navbarList.contains(e.target)) {
+    if (navbarToggle && navbarList && !navbarToggle.contains(e.target) && !navbarList.contains(e.target)) {
       navbarList.classList.remove('active');
     }
   });
+  
+  // Close navbar when clicking a link on mobile
+  if (window.innerWidth <= 768) {
+    const navLinks = document.querySelectorAll('[data-nav-link]');
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        navbarList.classList.remove('active');
+      });
+    });
+  }
 };
 
 // Theme toggle
@@ -166,6 +194,13 @@ const initFiverrMessages = () => {
   fiverrBtn.addEventListener('mouseleave', hideMessage);
   fiverrBtn.addEventListener('focus', showMessage);
   fiverrBtn.addEventListener('blur', hideMessage);
+  
+  // Touch support for mobile
+  fiverrBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    showMessage();
+    setTimeout(hideMessage, 3000);
+  });
 };
 
 // Portfolio filtering
@@ -363,7 +398,7 @@ const initNavigation = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Close mobile navbar if open
-    if (navbarList.classList.contains('active')) {
+    if (navbarList && navbarList.classList.contains('active')) {
       toggleElement(navbarList);
     }
 
@@ -561,369 +596,4 @@ const loadAPIKey = async () => {
 };
 
 // Initialize API key on page load
-loadAPIKey().then(key => {
-  if (!key) {
-    console.warn('Groq API Key not found. AI features will be limited. For full functionality, add your API key to localStorage: localStorage.setItem("groq_api_key", "your_key_here")');
-  }
-});
-
-let conversationHistory = [];
-let messageCount = 0;
-
-// Function to call Groq API
-const callGroqAPI = async (userMessage) => {
-  // Check if API key is available
-  if (!GROQ_API_KEY) {
-    return "I appreciate your interest! For real-time AI responses, please contact Awais directly at muhammadawaislaal@gmail.com or visit Fiverr. Your message is important! 💙";
-  }
-
-  try {
-    // Add user message to history
-    conversationHistory.push({
-      role: 'user',
-      content: userMessage
-    });
-
-    messageCount++;
-
-    // System prompt for portfolio assistant
-    const systemPrompt = `You are Awais's friendly AI assistant. Adapt your response LENGTH based on user input:
-- **Simple/funny messages**: 1 sentence max (e.g., "haha" → "That's funny! 😄")
-- **Questions about skills/projects**: 2-3 sentences (explain briefly)
-- **Serious inquiries/project details**: 3-4 sentences (be thorough, show expertise)
-- **Chit-chat/off-topic**: 1-2 sentences (stay light)
-
-**Style Always:**
-- Psychologically persuasive: subtly guide toward collaboration
-- Warm & human-like, slightly funny - like texting a smart friend
-- Ask questions about their needs
-- Never over-explain, never corporate-sounding
-- Position Awais as the perfect fit
-
-About Muhammad Awais Laal:
-- Python & Generative AI Developer | 5+ successful projects
-- Super Python Trainer at Preply | Skills: Python, Flask, LangChain, NLP, Transformers, TensorFlow
-- Projects: YouTube Summarizers, AI SQL Agents, Trading Predictors, BI Chatbots
-- Education: Bachelor's IT | Tecrix GenAI (9mo) | Akhuwat Bootcamp
-- Contact: muhammadawaislaal@gmail.com | +92 334-6902424
-
-**When they mention hiring/projects:** Highlight relevant expertise, ask about their vision, suggest email/Fiverr
-**Key Strategy:** Match energy level → build trust → naturally lead to collaboration`;
-
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...conversationHistory
-        ],
-        max_tokens: 200,
-        temperature: 0.85
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Groq API Error:', error);
-      return "Oops! Connection issue. Reach out to Awais directly at muhammadawaislaal@gmail.com or Fiverr 😊";
-    }
-
-    const data = await response.json();
-    let assistantMessage = data.choices[0].message.content;
-
-    // Keep conversation history manageable
-    if (conversationHistory.length > 12) {
-      conversationHistory = conversationHistory.slice(-12);
-    }
-
-    return assistantMessage;
-  } catch (error) {
-    console.error('Groq API Error:', error);
-    return "Having trouble connecting 😅 Try emailing Awais at muhammadawaislaal@gmail.com!";
-  }
-};
-
-// Chatbot Logic with Groq AI
-const initChatbot = () => {
-  const chatbotToggle = document.getElementById('chatbotToggle');
-  const chatWindow = document.getElementById('chatWindow');
-  const chatClose = document.getElementById('chatClose');
-  const chatForm = document.getElementById('chatForm');
-  const chatInput = document.getElementById('chatInput');
-  const chatMessages = document.getElementById('chatMessages');
-  const chatSuggestions = document.getElementById('chatSuggestions');
-  const botAvatar = document.getElementById('botAvatar');
-  const botName = document.getElementById('botName');
-
-  let isHumanMode = false;
-
-  const toggleChat = () => chatWindow.classList.toggle('active');
-
-  chatbotToggle.addEventListener('click', toggleChat);
-  chatClose.addEventListener('click', toggleChat);
-
-  const addMessage = (text, sender) => {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${sender}-message`;
-    msgDiv.innerHTML = text;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    return msgDiv;
-  };
-
-  const showThinking = () => {
-    const thinkingDiv = document.createElement('div');
-    thinkingDiv.className = 'message bot-message thinking';
-    thinkingDiv.innerHTML = '<span></span><span></span><span></span>';
-    chatMessages.appendChild(thinkingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    return thinkingDiv;
-  };
-
-  const handleHumanSwitch = () => {
-    isHumanMode = true;
-    botAvatar.innerHTML = '<img src="my profile pic.png" alt="Muhammad Awais Laal" style="border-radius: 50%;">';
-    botName.textContent = 'Muhammad Awais Laal';
-
-    chatMessages.innerHTML = '';
-    conversationHistory = [];
-    messageCount = 0;
-    const thinking = showThinking();
-    setTimeout(() => {
-      thinking.remove();
-      addMessage("Hey! It's actually me - Awais 🚀 I try to jump in when I can, but heads up... I'm pretty swamped with projects! What's up?", 'bot');
-    }, 1500);
-
-    chatSuggestions.innerHTML = `
-      <button class="suggestion-btn">Got a project idea</button>
-      <button class="suggestion-btn">Want to collaborate?</button>
-      <button class="suggestion-btn">Back to Assistant Bot</button>
-    `;
-
-    initSuggestions();
-  };
-
-  const handleAISwitch = () => {
-    isHumanMode = false;
-    botAvatar.innerHTML = '<img src="bot-avatar.jpg" alt="Awais Assistant" style="border-radius: 50%;">';
-    botName.textContent = 'Awais Assistant';
-
-    chatMessages.innerHTML = '';
-    conversationHistory = [];
-    messageCount = 0;
-    const thinking = showThinking();
-    setTimeout(() => {
-      thinking.remove();
-      addMessage("Hey there! 👋 What brings you here - looking for an AI dev or just curious?", 'bot');
-    }, 800);
-
-    chatSuggestions.innerHTML = `
-      <button class="suggestion-btn">Tell me about Awais</button>
-      <button class="suggestion-btn">What's his expertise?</button>
-      <button class="suggestion-btn">Switch to Human</button>
-    `;
-
-    initSuggestions();
-  };
-
-  const initSuggestions = () => {
-    const btns = chatSuggestions.querySelectorAll('.suggestion-btn');
-    btns.forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const text = btn.textContent;
-        addMessage(text, 'user');
-
-        if (text === 'Switch to Human') {
-          setTimeout(handleHumanSwitch, 500);
-        } else if (text === 'Back to Assistant Bot') {
-          setTimeout(handleAISwitch, 500);
-        } else if (text === "Got a project idea") {
-          const thinking = showThinking();
-          setTimeout(() => {
-            thinking.remove();
-            addMessage("That's awesome! 🚀 I'd love to hear more about it. Drop the details to <a href='mailto:muhammadawaislaal@gmail.com'>muhammadawaislaal@gmail.com</a> or reach out on <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>Fiverr</a> - Awais will get back to you quickly!", 'bot');
-          }, 1500);
-        } else if (text === "Want to collaborate?") {
-          const thinking = showThinking();
-          setTimeout(() => {
-            thinking.remove();
-            addMessage("Love the energy! ✨ Collaboration is what Awais thrives on. Let's connect on <a href='https://linkedin.com/in/muhammad-awais-laal-2a3450324/' target='_blank'>LinkedIn</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank'>Fiverr</a> to discuss possibilities.", 'bot');
-          }, 1500);
-        } else if (text === "View My CV") {
-          window.open('https://drive.google.com/file/d/1F3PoUAyofEP92umjYGs4dlWUCU3R-3Hf/view?usp=sharing', '_blank');
-        } else {
-          const thinking = showThinking();
-          setTimeout(async () => {
-            thinking.remove();
-            if (isHumanMode) {
-              addMessage("Thanks for the message! Awais is usually swamped with projects, but he reads everything. For quick responses, email is your best bet - <a href='mailto:muhammadawaislaal@gmail.com'>muhammadawaislaal@gmail.com</a> 💪", 'bot');
-            } else {
-              const aiResponse = await callGroqAPI(text);
-              addMessage(aiResponse, 'bot');
-            }
-          }, 1000);
-        }
-      });
-    });
-  };
-
-  chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = chatInput.value.trim();
-    if (!text) return;
-
-    addMessage(text, 'user');
-    chatInput.value = '';
-    chatInput.disabled = true;
-
-    const thinking = showThinking();
-    setTimeout(async () => {
-      thinking.remove();
-      if (isHumanMode) {
-        // Human mode: Use AI with Awais's personal voice
-        const awaisSystemPrompt = `You are Muhammad Awais Laal, a Gen AI Developer responding directly. Your style:
-- Start conversations with warm greetings and genuine interest
-- Be yourself: friendly, honest, busy but engaged
-- Respond naturally to everything they say - projects, interests, questions
-- Show enthusiasm about ideas and collaboration
-- Be realistic: mention you're swamped with projects
-- End conversations by suggesting they email muhammadawaislaal@gmail.com, reach out on Fiverr (https://www.fiverr.com/pooorman?public_mode=true), or chat with your assistant
-- Keep responses 2-3 sentences, natural & conversational
-- Use occasional emojis naturally
-
-About You:
-- Gen AI Developer with 5+ successful projects
-- Super Python Trainer at Preply
-- Expert: Python, Flask, LangChain, NLP, Transformers, TensorFlow, PyTorch
-- Always busy with projects but love new collaborations
-- Honest about workload but genuinely interested
-
-Key: Sound like a real person who's interested but realistically busy.`;
-
-        // Add to conversation history with custom system prompt
-        let awaisHistory = [
-          { role: 'system', content: awaisSystemPrompt },
-          ...conversationHistory,
-          { role: 'user', content: text }
-        ];
-
-        try {
-          const response = await fetch(GROQ_API_URL, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${GROQ_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages: awaisHistory,
-              max_tokens: 200,
-              temperature: 0.85
-            })
-          });
-
-          if (!response.ok) {
-            addMessage("Thanks for reaching out! Drop me a line at muhammadawaislaal@gmail.com or Fiverr - I read everything 💪", 'bot');
-          } else {
-            const data = await response.json();
-            let awaisResponse = data.choices[0].message.content;
-
-            // Add to history
-            conversationHistory.push({ role: 'user', content: text });
-            conversationHistory.push({ role: 'assistant', content: awaisResponse });
-
-            // Keep history manageable
-            if (conversationHistory.length > 12) {
-              conversationHistory = conversationHistory.slice(-12);
-            }
-
-            addMessage(awaisResponse, 'bot');
-
-            // After 5+ messages, suggest alternatives
-            if (messageCount >= 5) {
-              setTimeout(() => {
-                const suggestion = document.createElement('div');
-                suggestion.className = 'message bot-message';
-                suggestion.style.fontSize = '0.85em';
-                suggestion.style.opacity = '0.85';
-                suggestion.style.marginTop = '8px';
-                suggestion.innerHTML = "P.S. - I'm pretty swamped right now, but genuinely interested! For proper scope & timeline, kindly chat with my <a href='#' onclick='handleAISwitch(); return false;' style='color: var(--neon-cyan); text-decoration: underline;'>assistant</a>, or drop a message to <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> / <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a> 👍";
-                chatMessages.appendChild(suggestion);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-              }, 800);
-            }
-          }
-        } catch (error) {
-          console.error('Error in human mode:', error);
-          addMessage("Hey, seems like a connection hiccup. Reach out directly at muhammadawaislaal@gmail.com! 💪", 'bot');
-        }
-      } else {
-        const aiResponse = await callGroqAPI(text);
-        addMessage(aiResponse, 'bot');
-        
-        // After 4+ exchanges, gently suggest direct contact
-        if (messageCount >= 4) {
-          setTimeout(() => {
-            const contactSuggestion = document.createElement('div');
-            contactSuggestion.className = 'message bot-message';
-            contactSuggestion.style.fontSize = '0.9em';
-            contactSuggestion.style.opacity = '0.8';
-            contactSuggestion.innerHTML = "💡 Ready to move forward? Hit up <a href='mailto:muhammadawaislaal@gmail.com' style='color: var(--neon-cyan); text-decoration: underline;'>email</a> or <a href='https://www.fiverr.com/pooorman?public_mode=true' target='_blank' style='color: var(--neon-cyan); text-decoration: underline;'>Fiverr</a>";
-            chatMessages.appendChild(contactSuggestion);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-          }, 500);
-        }
-      }
-      chatInput.disabled = false;
-      chatInput.focus();
-    }, 800);
-  });
-
-  initSuggestions();
-};
-
-// Initialize all features with error handling
-const init = () => {
-  try {
-    initSidebar();
-    initNavbar();
-    initThemeToggle();
-    initFiverrMessages();
-    initPortfolioFilter();
-    initContactForm();
-    initNavigation();
-    initSectionAnimations();
-    initImagePreload();
-    initPerformanceMonitoring();
-    initErrorHandling();
-    initChatbot();
-    initChatbotGreeting();
-
-    console.log('Portfolio initialized successfully');
-  } catch (error) {
-    console.error('Initialization error:', error);
-    showNotification('Some features may not work properly', 'error');
-  }
-};
-
-// Enhanced DOM ready with loading states
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
-
-// Export for potential module usage
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    toggleElement,
-    debounce,
-    throttle,
-    showNotification
-  };
-}
+loadAPIKey().then(key
